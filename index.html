@@ -944,16 +944,147 @@ function playSfx(id){if(!sfxEnabled())return;if(sfxCustom[id]){const a=new Audio
 function playBuiltinSfx(id){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();const v=sfxVolume;const p=(f,t,d,type='sine',g=.3)=>{const o=ctx.createOscillator(),gn=ctx.createGain();o.connect(gn);gn.connect(ctx.destination);o.type=type;o.frequency.value=f;gn.gain.setValueAtTime(0,t);gn.gain.linearRampToValueAtTime(g*v,t+.02);gn.gain.exponentialRampToValueAtTime(.001,t+d);o.start(t);o.stop(t+d);};const n=ctx.currentTime;if(id==='win'){[[523,.0],[659,.1],[784,.2],[1047,.32]].forEach(([f,d])=>p(f,n+d,.28));}else if(id==='lose'){[[392,.0],[294,.16],[196,.32]].forEach(([f,d])=>p(f,n+d,.3,'sine',.25));}else if(id==='evo'){[[523,.0],[659,.1],[784,.2],[1047,.3],[1319,.44]].forEach(([f,d])=>p(f,n+d,.38));p(1047,n+.56,.5,'sine',.4);}else if(id==='duelwin'){[[784,.0],[1047,.12],[1319,.24],[1568,.38],[2093,.54]].forEach(([f,d])=>p(f,n+d,.4));}}catch(e){}}
 
 // ═══════════════════════════════════════════════════════════
-//  STUDENT NAMES, AVATARS, NICKNAMES
+//  INDEXEDDB — IMAGE STORAGE (no size limits)
+// ═══════════════════════════════════════════════════════════
+const IDB_NAME='cc_images',IDB_VER=1,IDB_STORE='avatars';
+let idb=null;
+// In-memory cache so renders don't stall waiting for IDB
+const imgCache={};
+
+function openIDB(){
+  return new Promise((res,rej)=>{
+    if(idb){res(idb);return;}
+    const req=indexedDB.open(IDB_NAME,IDB_VER);
+    req.onupgradeneeded=e=>{e.target.result.createObjectStore(IDB_STORE);}
+    req.onsuccess=e=>{idb=e.target.result;res(idb);}
+    req.onerror=()=>rej(req.error);
+  });
+}
+
+async function idbPut(key,value){
+  const db=await openIDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).put(value,key);
+    tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
+  });
+}
+
+async function idbGet(key){
+  const db=await openIDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readonly');
+    const req=tx.objectStore(IDB_STORE).get(key);
+    req.onsuccess=()=>res(req.result||null);
+    req.onerror=()=>rej(req.error);
+  });
+}
+
+async function idbDelete(key){
+  const db=await openIDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).delete(key);
+    tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
+  });
+}
+
+async function idbGetAll(){
+  const db=await openIDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readonly');
+    const store=tx.objectStore(IDB_STORE);
+    const keys=[],vals=[];
+    const kReq=store.openKeyCursor();
+    kReq.onsuccess=e=>{
+      const cur=e.target.result;
+      if(cur){keys.push(cur.key);cur.continue();}
+      else{
+        // Now fetch all values
+        let done=0;
+        if(!keys.length){res({});return;}
+        const result={};
+        keys.forEach(k=>{
+          const r=store.get(k);
+          r.onsuccess=()=>{result[k]=r.result;if(++done===keys.length)res(result);};
+          r.onerror=()=>{if(++done===keys.length)res(result);};
+        });
+      }
+    };
+    kReq.onerror=()=>rej(kReq.error);
+  });
+}
+
+// Migrate any old localStorage avatars into IDB on first load
+async function migrateAvatarsToIDB(){
+  const old=localStorage.getItem('cc_avatars');
+  if(!old)return;
+  try{
+    const obj=JSON.parse(old);
+    for(const[sid,stages] of Object.entries(obj)){
+      for(const[si,dataUrl] of Object.entries(stages)){
+        const key=`${sid}_${si}`;
+        if(!imgCache[key]){
+          imgCache[key]=dataUrl;
+          await idbPut(key,dataUrl);
+        }
+      }
+    }
+    localStorage.removeItem('cc_avatars');
+    console.log('Avatar migration to IndexedDB complete.');
+  }catch(e){console.warn('Avatar migration error:',e);}
+}
+
+// Pre-load all IDB images into cache so renders are synchronous
+async function preloadAllAvatars(){
+  try{
+    const all=await idbGetAll();
+    Object.assign(imgCache,all);
+  }catch(e){console.warn('IDB preload error:',e);}
+}
+
+// ── Image compression ──────────────────────────────────────
+// Resizes + compresses any image to max 256×256 @ quality 0.75
+function compressImage(dataUrl,maxSize=256,quality=0.75){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      const scale=Math.min(1,maxSize/Math.max(img.width,img.height));
+      const w=Math.round(img.width*scale),h=Math.round(img.height*scale);
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      res(canvas.toDataURL('image/webp',quality)||canvas.toDataURL('image/jpeg',quality));
+    };
+    img.onerror=()=>res(dataUrl); // fallback: keep original
+    img.src=dataUrl;
+  });
+}
+
+// ── Public avatar API ──────────────────────────────────────
+async function saveAvatarOverride(id,i,dataUrl){
+  const compressed=await compressImage(dataUrl);
+  const key=`${id}_${i}`;
+  imgCache[key]=compressed;
+  await idbPut(key,compressed);
+}
+
+function getStudentImg(s,i){
+  const key=`${s.id}_${i}`;
+  // Return from cache first (synchronous, safe for render loops)
+  if(imgCache[key])return imgCache[key];
+  // Fallback to config stages
+  return s.stages?.[i]||'';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STUDENT NAMES & NICKNAMES
 // ═══════════════════════════════════════════════════════════
 function getNameOverrides(){try{return JSON.parse(localStorage.getItem('cc_names')||'{}')}catch(e){return{}}}
-function getAvatarOverrides(){try{return JSON.parse(localStorage.getItem('cc_avatars')||'{}')}catch(e){return{}}}
 function getStudentName(s){return getNameOverrides()[s.id]||s.name;}
 function getStudentNickname(s){return state[s.id]?.nickname||'';}
-function getStudentImg(s,i){const av=getAvatarOverrides();return(av[s.id]&&av[s.id][i])||s.stages?.[i]||'';}
 function getCreatureImg(s,pts){return getStudentImg(s,getStage(pts));}
 function saveNameOverride(id,name){const o=getNameOverrides();o[id]=name;localStorage.setItem('cc_names',JSON.stringify(o));}
-function saveAvatarOverride(id,i,url){const o=getAvatarOverrides();if(!o[id])o[id]={};o[id][i]=url;localStorage.setItem('cc_avatars',JSON.stringify(o));}
 
 // ═══════════════════════════════════════════════════════════
 //  ADD NEW STUDENT
@@ -1097,7 +1228,19 @@ function startNicknameEdit(){document.getElementById('modalNicknameInput').value
 function cancelNicknameEdit(){document.getElementById('modalNicknameDisplay').style.display='';document.getElementById('modalNicknameEdit').style.display='none';}
 function saveNickname(){const val=document.getElementById('modalNicknameInput').value.trim();if(state[currentStudentId])state[currentStudentId].nickname=val;save();cancelNicknameEdit();refreshModal();renderDashboard();showToast(`🏷️ Nickname saved!`,'',1500);}
 function openAvatarEdit(){document.getElementById('quickAvatarInput').click();}
-function quickSaveAvatar(input){const f=input.files[0];if(!f)return;const s=getAllStudents().find(x=>x.id===currentStudentId);const stageIdx=getStage(state[currentStudentId].points);const r=new FileReader();r.onload=e=>{saveAvatarOverride(currentStudentId,stageIdx,e.target.result);refreshModal();renderDashboard();showToast(`🖼️ Avatar updated!`,'',2000);};r.readAsDataURL(f);input.value='';}
+async function quickSaveAvatar(input){
+  const f=input.files[0];if(!f)return;
+  showToast('🖼️ Compressing…','',800);
+  const s=getAllStudents().find(x=>x.id===currentStudentId);
+  const stageIdx=getStage(state[currentStudentId].points);
+  const r=new FileReader();
+  r.onload=async e=>{
+    await saveAvatarOverride(currentStudentId,stageIdx,e.target.result);
+    refreshModal();renderDashboard();
+    showToast(`🖼️ Avatar updated (Stage ${stageIdx})!`,'',2000);
+  };
+  r.readAsDataURL(f);input.value='';
+}
 
 function awardPoints(pts,label){
   const st=state[currentStudentId];const prev=getStage(st.points);
@@ -1229,7 +1372,21 @@ function saveProfileName(){const val=document.getElementById('profileNameInput')
 function startProfileNickEdit(){document.getElementById('profileNickEditRow').style.display='';}
 function cancelProfileNickEdit(){document.getElementById('profileNickEditRow').style.display='none';}
 function saveProfileNick(){const val=document.getElementById('profileNickInput').value.trim();if(state[currentProfileId])state[currentProfileId].nickname=val;save();renderProfile();renderDashboard();showToast('🏷️ Nickname saved!','',1500);}
-function openAvatarFromProfile(){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=e=>{const f=e.target.files[0];if(!f)return;const stageIdx=getStage(state[currentProfileId].points);const r=new FileReader();r.onload=ev=>{saveAvatarOverride(currentProfileId,stageIdx,ev.target.result);renderProfile();renderDashboard();showToast(`🖼️ Avatar updated!`,'',2000);};r.readAsDataURL(f);};inp.click();}
+function openAvatarFromProfile(){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=async e=>{
+    const f=e.target.files[0];if(!f)return;
+    showToast('🖼️ Compressing…','',800);
+    const stageIdx=getStage(state[currentProfileId].points);
+    const r=new FileReader();
+    r.onload=async ev=>{
+      await saveAvatarOverride(currentProfileId,stageIdx,ev.target.result);
+      renderProfile();renderDashboard();showToast(`🖼️ Avatar updated!`,'',2000);
+    };
+    r.readAsDataURL(f);
+  };
+  inp.click();
+}
 
 // ═══════════════════════════════════════════════════════════
 //  RANDOM PICKER
@@ -1508,17 +1665,44 @@ function loadSavedMusic(){const u=localStorage.getItem('cc_music_url');if(u)setM
 // ═══════════════════════════════════════════════════════════
 //  BACKUP & RESTORE
 // ═══════════════════════════════════════════════════════════
-function exportData(){
-  const keys=['cc_s1','cc_s2','cc_duelWin','cc_duelLoss','cc_hp_max','cc_hp_dmg','cc_hp_enabled','cc_unitName','cc_names','cc_avatars','cc_theme','cc_custom_cards','cc_card_overrides','cc_extra_students','cc_bg','cc_music_url','cc_duel_history',STORAGE_KEY];
-  const data={version:5,exported:new Date().toISOString()};
+async function exportData(){
+  showToast('📦 Building backup…','',1500);
+  const keys=['cc_s1','cc_s2','cc_duelWin','cc_duelLoss','cc_hp_max','cc_hp_dmg','cc_hp_enabled','cc_unitName','cc_names','cc_theme','cc_custom_cards','cc_card_overrides','cc_extra_students','cc_bg','cc_music_url','cc_duel_history',STORAGE_KEY];
+  const data={version:6,exported:new Date().toISOString()};
   keys.forEach(k=>{const v=localStorage.getItem(k);if(v!==null)data[k]=v;});
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`creature_classroom_backup_${new Date().toLocaleDateString('es-CL').replace(/\//g,'-')}.json`;a.click();showToast('📤 Backup exported!','',2000);
+  // Export all IDB images
+  try{
+    const allImgs=await idbGetAll();
+    data._idb_images=allImgs;
+  }catch(e){}
+  const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`cc_backup_${new Date().toLocaleDateString('es-CL').replace(/\//g,'-')}.json`;
+  a.click();showToast('📤 Backup exported!','',2000);
 }
-function importData(input){
+
+async function importData(input){
   const f=input.files[0];if(!f)return;
+  showToast('📥 Importing…','',1500);
   const r=new FileReader();
-  r.onload=e=>{try{const data=JSON.parse(e.target.result);Object.entries(data).forEach(([k,v])=>{if(!['version','exported'].includes(k))localStorage.setItem(k,v);});flash('importMsg');loadState();loadSavedBg();loadSavedMusic();loadSavedTheme();renderDashboard();showToast('📥 Data imported!','',2500);}catch(err){showToast('Error reading file.','red',2500);}};
+  r.onload=async e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      // Restore localStorage keys
+      Object.entries(data).forEach(([k,v])=>{
+        if(!['version','exported','_idb_images'].includes(k))localStorage.setItem(k,v);
+      });
+      // Restore IDB images
+      if(data._idb_images){
+        for(const[k,v] of Object.entries(data._idb_images)){
+          if(v){imgCache[k]=v;await idbPut(k,v);}
+        }
+      }
+      flash('importMsg');
+      loadState();loadSavedBg();loadSavedMusic();loadSavedTheme();renderDashboard();
+      showToast('📥 Data imported successfully!','',2500);
+    }catch(err){showToast('Error reading file.','red',2500);}
+  };
   r.readAsText(f);input.value='';
 }
 function resetAllPoints(){
@@ -1570,7 +1754,20 @@ function saveStudentEditorRow(id){
   if(state[id])state[id].nickname=nick||'';
   save();renderStudentEditor();renderDashboard();showToast('✏️ Saved!','',1400);
 }
-function saveStudentAvatar(id,si,input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{saveAvatarOverride(id,si,e.target.result);const img=document.getElementById(`se-img-${id}-${si}`);if(img){img.src=e.target.result;img.style.display='';}renderDashboard();if(currentStudentId===id)refreshModal();showToast(`🖼️ Stage ${si} saved!`,'',1600);};r.readAsDataURL(f);input.value='';}
+async function saveStudentAvatar(id,si,input){
+  const f=input.files[0];if(!f)return;
+  showToast('🖼️ Compressing…','',800);
+  const r=new FileReader();
+  r.onload=async e=>{
+    await saveAvatarOverride(id,si,e.target.result);
+    const img=document.getElementById(`se-img-${id}-${si}`);
+    if(img){img.src=imgCache[`${id}_${si}`]||'';img.style.display='';}
+    renderDashboard();
+    if(currentStudentId===id)refreshModal();
+    showToast(`🖼️ Stage ${si} saved! (compressed)`,'',1800);
+  };
+  r.readAsDataURL(f);input.value='';
+}
 
 // ═══════════════════════════════════════════════════════════
 //  TOAST
@@ -1580,8 +1777,17 @@ function showToast(msg,type='',duration=2500){const ex=document.querySelector('.
 // ═══════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════
-document.getElementById('navUnit').textContent=getUnitName();
-loadState();loadSavedBg();loadSavedMusic();loadSavedTheme();buildThemeUI();buildSoundUI();renderDashboard();
+async function init(){
+  document.getElementById('navUnit').textContent=getUnitName();
+  loadState();
+  loadSavedTheme();buildThemeUI();buildSoundUI();
+  // Migrate old localStorage avatars → IDB, then preload all into cache
+  await migrateAvatarsToIDB();
+  await preloadAllAvatars();
+  // Now safe to render (cache is populated)
+  loadSavedBg();loadSavedMusic();renderDashboard();
+}
+init();
 
 // Button ripple effect
 document.addEventListener('click',e=>{
