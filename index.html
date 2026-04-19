@@ -454,10 +454,157 @@ h2{background:linear-gradient(135deg,var(--text) 40%,var(--accent));-webkit-back
 
 /* HP bar inner glow */
 .hp-bar-fill{box-shadow:0 0 6px currentColor}
+
+/* ── DECK / FOLDER SYSTEM ─────────────────────────────── */
+.deck-bar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.deck-tab{background:var(--card2);border:2px solid var(--border);color:var(--muted);padding:5px 13px;border-radius:99px;cursor:pointer;font-size:.76rem;font-weight:600;transition:all .18s;white-space:nowrap;font-family:inherit;display:flex;align-items:center;gap:5px}
+.deck-tab:hover{border-color:var(--accent);color:var(--text)}
+.deck-tab.active{background:var(--accent);border-color:var(--accent);color:white}
+.deck-tab .deck-count{background:rgba(255,255,255,.22);border-radius:99px;padding:1px 6px;font-size:.66rem;font-weight:700}
+.deck-tab .deck-del{background:none;border:none;color:inherit;cursor:pointer;font-size:.75rem;padding:0 2px;opacity:.7;line-height:1}
+.deck-tab .deck-del:hover{opacity:1}
+.deck-add-btn{background:none;border:2px dashed var(--border);color:var(--muted);padding:5px 12px;border-radius:99px;cursor:pointer;font-size:.76rem;transition:all .18s;font-family:inherit;white-space:nowrap}
+.deck-add-btn:hover{border-color:var(--accent);color:var(--accent)}
+.deck-selector-wrap{background:var(--card2);border:1px solid var(--border);border-radius:11px;padding:10px 13px;margin-bottom:14px}
+.deck-selector-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:7px}
+.deck-selector-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.deck-chip{background:var(--card);border:1.5px solid var(--border);color:var(--muted);padding:4px 12px;border-radius:99px;cursor:pointer;font-size:.75rem;font-weight:600;transition:all .18s;white-space:nowrap;font-family:inherit}
+.deck-chip:hover{border-color:var(--accent);color:var(--text)}
+.deck-chip.active{background:var(--accent);border-color:var(--accent);color:white}
+.deck-chip.all-chip{border-color:var(--purple);color:var(--purple)}
+.deck-chip.all-chip.active{background:var(--purple);border-color:var(--purple);color:white}
+.card-deck-badge{display:inline-block;background:rgba(160,108,245,.15);color:var(--purple);border-radius:99px;font-size:.6rem;font-weight:700;padding:2px 7px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.new-deck-form{display:flex;gap:7px;align-items:center;margin-top:9px;flex-wrap:wrap}
+.new-deck-input{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-size:.84rem;font-family:inherit;flex:1;min-width:150px}
+.new-deck-input:focus{outline:none;border-color:var(--accent)}
+
+/* ══════════════════════════════════════════════════════════
+   NEW FEATURES CSS
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Animated Background Canvas ── */
+#bgCanvas{position:fixed;inset:0;z-index:-1;pointer-events:none}
+body.anim-bg-active{background:var(--bg)!important;background-image:none!important}
+body.anim-bg-active.has-bg-image::before{display:none}
+
+/* ── Creature Frames ── */
+.creature-wrap{overflow:visible}
+/* fire frame - Stage 2 */
+@keyframes fireFlicker{0%,100%{box-shadow:0 0 8px 3px #f5c842,0 0 18px 6px #ff6b00,0 0 30px 10px rgba(255,60,0,.4)}50%{box-shadow:0 0 12px 5px #ffe066,0 0 24px 9px #ff8c00,0 0 40px 14px rgba(255,80,0,.5)}}
+.frame-fire .creature-img,.frame-fire .creature-fallback{border-radius:50%;animation:fireFlicker 1.2s ease-in-out infinite!important}
+/* ice frame - cool blue */
+@keyframes iceGlow{0%,100%{box-shadow:0 0 8px 3px #7ed8f6,0 0 18px 6px #4fc3f7,0 0 28px 8px rgba(100,200,255,.3)}50%{box-shadow:0 0 14px 5px #b3ecff,0 0 26px 9px #29b6f6,0 0 38px 12px rgba(80,180,255,.45)}}
+.frame-ice .creature-img,.frame-ice .creature-fallback{border-radius:50%;animation:iceGlow 2s ease-in-out infinite!important}
+/* nature frame */
+@keyframes leafPulse{0%,100%{box-shadow:0 0 8px 3px #3dbf82,0 0 18px 6px #1a9e62,0 0 28px 8px rgba(30,180,100,.3)}50%{box-shadow:0 0 14px 5px #5dd8a0,0 0 26px 9px #2dc878,0 0 38px 12px rgba(50,200,120,.45)}}
+.frame-nature .creature-img,.frame-nature .creature-fallback{border-radius:50%;animation:leafPulse 2.5s ease-in-out infinite!important}
+/* lightning frame */
+@keyframes lightning{0%,90%,100%{box-shadow:0 0 8px 3px #f5c842,0 0 16px 5px rgba(245,200,66,.4)}92%,96%{box-shadow:0 0 20px 8px #fff,0 0 40px 16px #f5c842,0 0 60px 24px rgba(255,255,255,.6)}}
+.frame-lightning .creature-img,.frame-lightning .creature-fallback{border-radius:50%;animation:lightning 2.4s ease-in-out infinite!important}
+/* rainbow frame */
+@keyframes rainbow{0%{box-shadow:0 0 14px 5px #f5c842}20%{box-shadow:0 0 14px 5px #4f8ef7}40%{box-shadow:0 0 14px 5px #a06cf5}60%{box-shadow:0 0 14px 5px #3dbf82}80%{box-shadow:0 0 14px 5px #e05c5c}100%{box-shadow:0 0 14px 5px #f5c842}}
+.frame-rainbow .creature-img,.frame-rainbow .creature-fallback{border-radius:50%;animation:rainbow 3s linear infinite!important}
+/* shiny frame */
+@keyframes shinyRotate{0%{filter:hue-rotate(0deg) brightness(1.2)}100%{filter:hue-rotate(360deg) brightness(1.2)}}
+.frame-shiny .creature-img{animation:creatureFloat 3s ease-in-out infinite,shinyRotate 4s linear infinite!important}
+.frame-shiny .creature-wrap::after{content:'✨';position:absolute;top:-6px;right:-6px;font-size:1rem;animation:bounce 1s ease-in-out infinite alternate}
+
+/* ── Evolution Animation ── */
+@keyframes evoFlash{0%{filter:brightness(1)}25%{filter:brightness(3) saturate(0)}50%{filter:brightness(1)}75%{filter:brightness(2.5) saturate(2)}100%{filter:brightness(1)}}
+@keyframes evoScale{0%{transform:scale(1)}30%{transform:scale(.8)}60%{transform:scale(1.3)}80%{transform:scale(.95)}100%{transform:scale(1)}}
+@keyframes evoSpin{0%{transform:rotate(0deg) scale(1)}50%{transform:rotate(180deg) scale(1.4)}100%{transform:rotate(360deg) scale(1)}}
+.creature-img.evolving{animation:evoFlash .8s ease,evoScale .8s cubic-bezier(.34,1.56,.64,1)!important}
+.creature-fallback.evolving{animation:evoFlash .8s ease,evoScale .8s cubic-bezier(.34,1.56,.64,1)!important}
+
+/* ── Animated Point Counter ── */
+@keyframes numPop{0%{transform:scale(1)}40%{transform:scale(1.35)}70%{transform:scale(.92)}100%{transform:scale(1)}}
+.pts-animating{animation:numPop .45s cubic-bezier(.34,1.56,.64,1)}
+.modal-pts{display:inline-block;transition:color .3s}
+
+/* ── Speech Bubble Nickname ── */
+.speech-bubble-wrap{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);z-index:20;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
+.student-card:hover .speech-bubble-wrap{opacity:1}
+.speech-bubble{background:var(--card);border:1.5px solid var(--accent);border-radius:10px;padding:4px 10px;font-size:.7rem;font-weight:600;color:var(--accent);font-style:italic;position:relative;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+.speech-bubble::after{content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--accent)}
+.speech-bubble::before{content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--card);z-index:1}
+
+/* ── Speaking Prompt Card ── */
+.tag-speak{background:rgba(245,200,66,.15);color:var(--gold)}
+.speak-card-img{width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:8px}
+.speak-prompt-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:250;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px}
+.speak-prompt-overlay.hidden{display:none}
+.speak-card-big{background:var(--card);border:3px solid var(--gold);border-radius:20px;padding:30px;text-align:center;max-width:600px;width:100%;box-shadow:0 0 40px rgba(245,200,66,.3)}
+.speak-card-big .sc-tag{font-size:.7rem;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:12px}
+.speak-card-big .sc-prompt{font-size:clamp(1.2rem,4vw,2rem);font-weight:800;line-height:1.4;color:var(--text)}
+.speak-card-big .sc-hint{font-size:.9rem;color:var(--muted);margin-top:10px;font-style:italic}
+.speak-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+/* ── Sentence Starter Bank ── */
+.starters-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:250;display:flex;flex-direction:column;padding:20px;overflow-y:auto}
+.starters-overlay.hidden{display:none}
+.starters-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.starters-title{font-size:1.4rem;font-weight:900;color:var(--gold)}
+.starters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;flex:1}
+.starter-card{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;transition:all .2s;position:relative}
+.starter-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 24px rgba(79,142,247,.2)}
+.starter-card .sc-cat{font-size:.64rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:6px}
+.starter-card .sc-text{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:4px}
+.starter-card .sc-example{font-size:.78rem;color:var(--muted);font-style:italic}
+.starter-card.highlighted{border-color:var(--gold);background:rgba(245,200,66,.08)}
+.starter-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.76rem;opacity:.6}
+.starter-del:hover{color:var(--red);opacity:1}
+
+/* Frame picker in settings */
+.frame-picker{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.frame-opt{background:var(--card2);border:2px solid var(--border);border-radius:10px;padding:6px 13px;cursor:pointer;font-size:.78rem;transition:all .18s;font-family:inherit}
+.frame-opt:hover{border-color:var(--accent)}
+.frame-opt.active{border-color:var(--gold);background:rgba(245,200,66,.12);color:var(--gold)}
+
+/* Animated bg picker */
+.anim-bg-picker{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.anim-bg-opt{border:2px solid var(--border);border-radius:10px;padding:7px 14px;cursor:pointer;font-size:.78rem;font-weight:600;transition:all .18s;font-family:inherit;background:var(--card2);color:var(--muted)}
+.anim-bg-opt:hover{border-color:var(--accent);color:var(--text)}
+.anim-bg-opt.active{border-color:var(--accent);background:var(--accent);color:white}
 </style>
 </head>
 <body>
 <audio id="bgAudio" loop></audio>
+<canvas id="bgCanvas"></canvas>
+
+<!-- Speaking prompt fullscreen -->
+<div class="speak-prompt-overlay hidden" id="speakPromptOverlay">
+  <div class="speak-card-big" id="speakCardBig">
+    <div class="sc-tag">🗣️ Speaking Prompt</div>
+    <div class="sc-prompt" id="speakPromptText"></div>
+    <div class="sc-hint" id="speakPromptHint"></div>
+  </div>
+  <div class="speak-btns">
+    <button class="btn purple" onclick="nextSpeakCard()">🔀 Next Prompt</button>
+    <button class="btn red" onclick="closeSpeakOverlay()">✕ Close</button>
+  </div>
+</div>
+
+<!-- Sentence Starter Bank fullscreen -->
+<div class="starters-overlay hidden" id="startersOverlay">
+  <div class="starters-header">
+    <span class="starters-title">💬 Sentence Starter Bank</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="small-btn" onclick="highlightRandomStarter()">🎲 Highlight Random</button>
+      <button class="small-btn primary" onclick="openAddStarterForm()">➕ Add Starter</button>
+      <button class="btn red" style="padding:7px 14px;font-size:.82rem" onclick="closeStarters()">✕ Close</button>
+    </div>
+  </div>
+  <div id="addStarterForm" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <input id="newStarterCat" class="settings-input" style="max-width:180px" placeholder="Category (e.g. Opinions)">
+      <input id="newStarterText" class="settings-input" placeholder="Starter (e.g. I think that…)">
+      <input id="newStarterExample" class="settings-input" placeholder="Example (optional)">
+    </div>
+    <button class="small-btn primary" onclick="addStarter()">Add</button>
+    <button class="small-btn" onclick="closeAddStarterForm()">Cancel</button>
+  </div>
+  <div class="starters-grid" id="startersGrid"></div>
+</div>
 
 <!-- Music player -->
 <div id="music-player" class="hidden">
@@ -530,6 +677,8 @@ h2{background:linear-gradient(135deg,var(--text) 40%,var(--accent));-webkit-back
   <button class="nav-btn" onclick="showScreen('settings',this)">⚙️</button>
   <button class="nav-icon-btn" onclick="openPicker()" title="Random Picker">🎲</button>
   <button class="nav-icon-btn" onclick="openProjector()" title="Projector Mode">📽️</button>
+  <button class="nav-icon-btn" onclick="openSpeakMode()" title="Speaking Prompts">🗣️</button>
+  <button class="nav-icon-btn" onclick="openStarters()" title="Sentence Starters">💬</button>
 </nav>
 
 <main>
@@ -599,6 +748,11 @@ h2{background:linear-gradient(135deg,var(--text) 40%,var(--accent));-webkit-back
       <button class="btn gold" id="startDuelBtn" onclick="startMatch()" disabled>⚔️ Start Match</button>
       <button class="btn grey" id="resetHpBtn" style="display:none" onclick="resetHP()">↺ Reset HP</button>
     </div>
+    <!-- Deck selector for duel -->
+    <div class="deck-selector-wrap" id="duelDeckSelector">
+      <div class="deck-selector-label">🃏 Card deck for this match</div>
+      <div class="deck-selector-row" id="duelDeckRow"></div>
+    </div>
     <div class="match-over-box" id="matchOverBox" style="display:none"></div>
     <!-- Duel history -->
     <div id="duelHistorySection" style="margin-top:24px;display:none">
@@ -610,10 +764,12 @@ h2{background:linear-gradient(135deg,var(--text) 40%,var(--accent));-webkit-back
 
 <!-- CARDS -->
 <div class="screen" id="screen-cards">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
     <h2 style="margin:0">🃏 Cards — <span id="cardsUnitLabel" style="color:var(--gold)"></span></h2>
     <button class="small-btn" id="toggleAllBtn" onclick="toggleAllAnswers()">🙈 Hide All Answers</button>
   </div>
+  <!-- Deck tabs -->
+  <div class="deck-bar" id="deckBar"></div>
   <div class="cards-grid" id="cardsGrid"></div>
 </div>
 
@@ -674,6 +830,16 @@ h2{background:linear-gradient(135deg,var(--text) 40%,var(--accent));-webkit-back
         <button class="small-btn danger" onclick="resetTheme()">↺ Reset to Default</button>
       </div>
       <div class="settings-section">
+        <h3>✨ Animated Background</h3>
+        <p style="font-size:.76rem;color:var(--muted);margin-bottom:10px">Replaces the static background with a live animation. Disables any uploaded background image while active.</p>
+        <div class="anim-bg-picker" id="animBgPicker"></div>
+      </div>
+      <div class="settings-section">
+        <h3>🔮 Creature Frame Style</h3>
+        <p style="font-size:.76rem;color:var(--muted);margin-bottom:10px">Applies a glowing frame to all creature images. Saved per browser.</p>
+        <div class="frame-picker" id="framePicker"></div>
+      </div>
+      <div class="settings-section">
         <h3>🔤 Typography & Layout</h3>
         <div class="settings-row"><span class="settings-label">Font family</span>
           <select class="settings-input" id="themeFontFamily" onchange="applyThemeLive()">
@@ -712,9 +878,19 @@ h2{background:linear-gradient(135deg,var(--text) 40%,var(--accent));-webkit-back
 
     <div class="stab-panel" id="stab-cards">
       <div class="settings-section">
+        <h3>📂 Card Decks (Folders)</h3>
+        <p style="font-size:.76rem;color:var(--muted);margin-bottom:11px">Organise cards into decks — one per class, unit, or activity. The "All Cards" deck always contains everything. Choose a deck in the Duel screen to draw only from those cards.</p>
+        <div id="deckManagerList"></div>
+        <div class="new-deck-form">
+          <input class="new-deck-input" id="newDeckName" type="text" placeholder="New deck name (e.g. Class 3 – Unit 2)…">
+          <button class="small-btn primary" onclick="createDeck()">➕ Create</button>
+        </div>
+      </div>
+      <div class="settings-section">
         <h3>➕ Add Custom Card</h3>
         <div class="card-form">
-          <select id="newCardType"><option value="fill-blank">Fill in the Blank</option><option value="error-correction">Error Correction</option><option value="transform">Sentence Transformation</option></select>
+          <select id="newCardType"><option value="fill-blank">Fill in the Blank</option><option value="error-correction">Error Correction</option><option value="transform">Sentence Transformation</option><option value="speak">🗣️ Speaking Prompt</option></select>
+          <select id="newCardDeck" style="margin-bottom:9px"><option value="">— No deck (general pool) —</option></select>
           <textarea id="newCardSentence" placeholder="Sentence / prompt…"></textarea>
           <input id="newCardAnswer" type="text" placeholder="Correct answer…">
           <button class="btn" style="width:100%" onclick="addCustomCard()">➕ Add Card</button>
@@ -1184,9 +1360,12 @@ function renderDashboard(){
     const evoC=stage===2?'var(--s2color)':stage===1?'var(--s1color)':'var(--accent)';
     const imgSrc=getCreatureImg(s,st.points);
     const imgHtml=imgSrc?`<img class="creature-img" src="${imgSrc}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="${name}"><div class="creature-fallback" style="display:none">${s._emoji||'🐾'}</div>`:`<div class="creature-fallback">${s._emoji||'🐾'}</div>`;
-    card.innerHTML=`${sb}${si}<div class="creature-wrap">${imgHtml}${acc?`<div class="acc-overlay">${acc.emoji}</div>`:''}</div><div class="student-name">${name}</div><div class="student-nickname">${nick||'&nbsp;'}</div><div class="student-pts">⭐ ${st.points} pts</div><div class="evo-bar-wrap"><div class="evo-bar animated" style="width:${Math.min(evo.pct,100)}%;background:${evoC};animation-delay:${idx*0.05+0.2}s"></div></div><div class="evo-label">${evo.label}</div>`;
+    const bubbleHtml=nick?`<div class="speech-bubble-wrap"><div class="speech-bubble">"${nick}"</div></div>`:'';
+    card.innerHTML=`${sb}${si}<div class="creature-wrap">${bubbleHtml}${imgHtml}${acc?`<div class="acc-overlay">${acc.emoji}</div>`:''}</div><div class="student-name">${name}</div><div class="student-nickname">&nbsp;</div><div class="student-pts">⭐ ${st.points} pts</div><div class="evo-bar-wrap"><div class="evo-bar animated" style="width:${Math.min(evo.pct,100)}%;background:${evoC};animation-delay:${idx*0.05+0.2}s"></div></div><div class="evo-label">${evo.label}</div>`;
     grid.appendChild(card);
   });
+  // Apply creature frame to all cards after render
+  setTimeout(applyFrameToAll, 0);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1244,14 +1423,22 @@ async function quickSaveAvatar(input){
 
 function awardPoints(pts,label){
   const st=state[currentStudentId];const prev=getStage(st.points);
+  const prevPts=st.points;
   st.points=Math.max(0,st.points+pts);const cur=getStage(st.points);save();
   const s=getAllStudents().find(x=>x.id===currentStudentId);
   const name=getStudentName(s);
-  // Floating point pop
+  // Animated point counter
+  const ptsEl=document.getElementById('modalPts');
+  if(ptsEl) animateCounter(ptsEl,prevPts,st.points);
+  // Floating pop
   spawnPtFloat(pts);
   if(cur>prev){
     playSfx('evo');
     const imgSrc=getCreatureImg(s,st.points);
+    // Evolution animation on modal creature
+    const mImg=document.getElementById('modalCreatureImg');
+    const mFb=document.getElementById('modalCreatureFb');
+    [mImg,mFb].forEach(el=>{if(el){el.classList.remove('evolving');void el.offsetWidth;el.classList.add('evolving');setTimeout(()=>el.classList.remove('evolving'),900);}});
     showCelebration(`🌟 Evolution!`,`${name} evolved to Stage ${cur}!`,imgSrc);
   }else if(pts>0){playSfx('win');showToast(`+${pts} pts for ${name}`,'',1800);}
   else{playSfx('lose');}
@@ -1504,6 +1691,7 @@ let matchActive=false,matchRound=0;
 function renderDuelDropdowns(){
   ['duel-p1','duel-p2'].forEach(id=>{const sel=document.getElementById(id),val=sel.value;sel.innerHTML='<option value="">— Select —</option>';getAllStudents().forEach(s=>{if(state[s.id])sel.innerHTML+=`<option value="${s.id}">${getStudentName(s)} (${state[s.id].points} pts)</option>`;});sel.value=val;});
   updateDuelSlots();document.getElementById('duelCardArea').style.display='none';document.getElementById('matchOverBox').style.display='none';document.getElementById('duelRoundBadge').style.display='none';['p1','p2'].forEach(s=>document.getElementById(`hp-area-${s}`).style.display='none');document.getElementById('resetHpBtn').style.display='none';matchActive=false;matchRound=0;
+  renderDuelDeckSelector();
 }
 function updateDuelSlots(){const p1=document.getElementById('duel-p1').value,p2=document.getElementById('duel-p2').value;renderDuelSlot('duel-slot1',p1);renderDuelSlot('duel-slot2',p2);document.getElementById('startDuelBtn').disabled=!(p1&&p2&&p1!==p2);}
 function renderDuelSlot(slotId,sid){
@@ -1529,12 +1717,12 @@ function updateRoundDisplay(){document.getElementById('roundNum').textContent=ma
 function drawCard(){
   const cards=getAllCards(),idx=Math.floor(Math.random()*cards.length),card=cards[idx];
   currentCardIndex=idx;
-  const tagMap={'fill-blank':['Fill in the Blank','tag-fill'],'error-correction':['Error Correction','tag-error'],'transform':['Sentence Transformation','tag-transform']};
+  const tagMap={'fill-blank':['Fill in the Blank','tag-fill'],'error-correction':['Error Correction','tag-error'],'transform':['Sentence Transformation','tag-transform'],'speak':['🗣️ Speaking Prompt','tag-speak']};
   const[lbl,cls]=tagMap[card.type]||['Challenge','tag-fill'];
   document.getElementById('duelCardTag').textContent=lbl;
   document.getElementById('duelCardTag').className=`card-type-tag ${cls}`;
   document.getElementById('duelSentence').textContent=card.sentence;
-  document.getElementById('duelAnswerText').textContent=card.answer;
+  document.getElementById('duelAnswerText').textContent=card.answer||card.hint||'';
   // Always hide answer when drawing a new card
   document.getElementById('duelAnswerBlock').classList.remove('visible');
   const btn=document.getElementById('duelRevealBtn');
@@ -1588,49 +1776,280 @@ function endMatch(wid,lid,wn,ln){
 function resetDuelScreen(){['duel-p1','duel-p2'].forEach(id=>document.getElementById(id).disabled=false);document.getElementById('startDuelBtn').disabled=false;renderDuelDropdowns();}
 
 // ═══════════════════════════════════════════════════════════
+//  DECKS (FOLDERS)
+// ═══════════════════════════════════════════════════════════
+function getDecks(){try{return JSON.parse(localStorage.getItem('cc_decks')||'[]')}catch(e){return[]}}
+function saveDecks(arr){localStorage.setItem('cc_decks',JSON.stringify(arr));}
+function newDeckId(){return 'deck_'+Date.now();}
+
+// The "active deck" for the Cards screen filter (null = All)
+let activeDeckFilter=null;
+// The "active deck" for the Duel draw pool (null = All)
+let duelDeckFilter=null;
+
+function createDeck(){
+  const name=document.getElementById('newDeckName').value.trim();
+  if(!name){showToast('Enter a deck name.','red',1800);return;}
+  const decks=getDecks();
+  if(decks.find(d=>d.name===name)){showToast('A deck with that name already exists.','red',2000);return;}
+  decks.push({id:newDeckId(),name});
+  saveDecks(decks);
+  document.getElementById('newDeckName').value='';
+  renderDeckManager();renderDeckBar();renderDuelDeckSelector();
+  // Populate the deck dropdown in add-card form
+  populateDeckDropdown();
+  showToast(`📂 "${name}" created!`,'',1600);
+}
+
+function deleteDeck(id){
+  const deck=getDecks().find(d=>d.id===id);
+  if(!confirm(`Delete deck "${deck?.name}"? Cards in this deck will move to the general pool.`))return;
+  // Remove deck assignment from all custom cards
+  const cards=getCustomCards().map(c=>c.deck===id?{...c,deck:''}:c);
+  saveCustomCards(cards);
+  saveDecks(getDecks().filter(d=>d.id!==id));
+  if(activeDeckFilter===id)activeDeckFilter=null;
+  if(duelDeckFilter===id)duelDeckFilter=null;
+  renderDeckManager();renderDeckBar();renderDuelDeckSelector();
+  renderCards();populateDeckDropdown();
+  showToast('Deck deleted.','',1500);
+}
+
+function renameDeck(id){
+  const deck=getDecks().find(d=>d.id===id);
+  const name=prompt('New name for this deck:',deck?.name||'');
+  if(!name||!name.trim())return;
+  const decks=getDecks().map(d=>d.id===id?{...d,name:name.trim()}:d);
+  saveDecks(decks);
+  renderDeckManager();renderDeckBar();renderDuelDeckSelector();populateDeckDropdown();
+  showToast(`Renamed to "${name.trim()}"`,'',1500);
+}
+
+// How many cards are in each deck
+function getDeckCounts(){
+  const custom=getCustomCards();
+  const counts={};
+  getDecks().forEach(d=>{counts[d.id]=custom.filter(c=>c.deck===d.id).length;});
+  counts['']= custom.filter(c=>!c.deck).length; // unassigned
+  return counts;
+}
+
+// Return cards filtered for a deck (null/'' = all)
+function getCardsForDeck(deckId){
+  const ov=getCardOverrides();
+  const base=CONFIG.challengeCards.map((c,i)=>({...(ov[i]?{...c,...ov[i]}:c),_idx:i,_isConfig:true}));
+  const custom=getCustomCards().map((c,i)=>({...c,_idx:i,_isConfig:false}));
+  if(!deckId){
+    return[...base,...custom]; // All cards
+  }
+  // Config cards don't belong to custom decks; only custom cards can be in decks
+  return custom.filter(c=>c.deck===deckId);
+}
+
+// For duel draw — respects duelDeckFilter
+function getAllCards(){
+  return getCardsForDeck(duelDeckFilter);
+}
+
+// ── Render deck bar (Cards screen) ──────────────────────────
+function renderDeckBar(){
+  const bar=document.getElementById('deckBar');if(!bar)return;
+  const decks=getDecks();
+  const counts=getDeckCounts();
+  const configCount=CONFIG.challengeCards.length;
+  const totalAll=configCount+getCustomCards().length;
+  bar.innerHTML='';
+
+  // "All Cards" tab
+  const allTab=document.createElement('button');
+  allTab.className=`deck-tab${!activeDeckFilter?' active':''}`;
+  allTab.innerHTML=`📚 All Cards <span class="deck-count">${totalAll}</span>`;
+  allTab.onclick=()=>{activeDeckFilter=null;renderDeckBar();renderCards();};
+  bar.appendChild(allTab);
+
+  // "Config (general)" tab — cards from config.js not in any deck
+  const cfgTab=document.createElement('button');
+  cfgTab.className=`deck-tab${activeDeckFilter==='_config'?' active':''}`;
+  cfgTab.innerHTML=`⚙️ config.js <span class="deck-count">${configCount}</span>`;
+  cfgTab.onclick=()=>{activeDeckFilter='_config';renderDeckBar();renderCards();};
+  bar.appendChild(cfgTab);
+
+  decks.forEach(d=>{
+    const count=counts[d.id]||0;
+    const tab=document.createElement('button');
+    tab.className=`deck-tab${activeDeckFilter===d.id?' active':''}`;
+    tab.innerHTML=`📂 ${d.name} <span class="deck-count">${count}</span><button class="deck-del" onclick="deleteDeck('${d.id}')" title="Delete deck">✕</button>`;
+    tab.onclick=(e)=>{if(e.target.classList.contains('deck-del'))return;activeDeckFilter=d.id;renderDeckBar();renderCards();};
+    bar.appendChild(tab);
+  });
+
+  // "Unassigned" tab if there are unassigned custom cards
+  const unassigned=counts['']||0;
+  if(unassigned>0){
+    const uTab=document.createElement('button');
+    uTab.className=`deck-tab${activeDeckFilter==='_unassigned'?' active':''}`;
+    uTab.innerHTML=`📋 Unassigned <span class="deck-count">${unassigned}</span>`;
+    uTab.onclick=()=>{activeDeckFilter='_unassigned';renderDeckBar();renderCards();};
+    bar.appendChild(uTab);
+  }
+
+  // Add deck button
+  const addBtn=document.createElement('button');
+  addBtn.className='deck-add-btn';addBtn.textContent='+ New Deck';
+  addBtn.onclick=()=>{
+    const name=prompt('New deck name (e.g. "Class 3 – Unit 2"):');
+    if(!name||!name.trim())return;
+    const decks=getDecks();
+    decks.push({id:newDeckId(),name:name.trim()});
+    saveDecks(decks);renderDeckBar();renderDuelDeckSelector();renderDeckManager();populateDeckDropdown();
+    showToast(`📂 "${name.trim()}" created!`,'',1500);
+  };
+  bar.appendChild(addBtn);
+}
+
+// ── Duel deck selector ──────────────────────────────────────
+function renderDuelDeckSelector(){
+  const row=document.getElementById('duelDeckRow');if(!row)return;
+  const decks=getDecks();
+  row.innerHTML='';
+
+  const allChip=document.createElement('button');
+  allChip.className=`deck-chip all-chip${!duelDeckFilter?' active':''}`;
+  allChip.textContent=`🃏 All Cards (${CONFIG.challengeCards.length+getCustomCards().length})`;
+  allChip.onclick=()=>{duelDeckFilter=null;renderDuelDeckSelector();};
+  row.appendChild(allChip);
+
+  decks.forEach(d=>{
+    const count=getCustomCards().filter(c=>c.deck===d.id).length;
+    if(count===0)return; // don't show empty decks as duel options
+    const chip=document.createElement('button');
+    chip.className=`deck-chip${duelDeckFilter===d.id?' active':''}`;
+    chip.textContent=`📂 ${d.name} (${count})`;
+    chip.onclick=()=>{duelDeckFilter=d.id;renderDuelDeckSelector();};
+    row.appendChild(chip);
+  });
+}
+
+// ── Deck manager (Settings) ─────────────────────────────────
+function renderDeckManager(){
+  const wrap=document.getElementById('deckManagerList');if(!wrap)return;
+  const decks=getDecks();
+  const counts=getDeckCounts();
+  if(!decks.length){wrap.innerHTML='<div class="empty">No decks yet. Create one below.</div>';return;}
+  wrap.innerHTML='';
+  decks.forEach(d=>{
+    const count=counts[d.id]||0;
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:9px 12px;margin-bottom:7px';
+    row.innerHTML=`<span style="font-size:.92rem">📂</span><span style="flex:1;font-weight:600;font-size:.86rem">${d.name}</span><span style="font-size:.72rem;color:var(--muted)">${count} card${count!==1?'s':''}</span><button class="small-btn" style="padding:3px 9px;font-size:.72rem" onclick="renameDeck('${d.id}')">✏️ Rename</button><button class="small-btn danger" style="padding:3px 9px;font-size:.72rem" onclick="deleteDeck('${d.id}')">✕</button>`;
+    wrap.appendChild(row);
+  });
+}
+
+// ── Populate deck dropdown in "Add Card" form ───────────────
+function populateDeckDropdown(){
+  const sel=document.getElementById('newCardDeck');if(!sel)return;
+  const decks=getDecks();
+  sel.innerHTML='<option value="">— No deck (general pool) —</option>';
+  decks.forEach(d=>{sel.innerHTML+=`<option value="${d.id}">${d.name}</option>`;});
+}
+
+// ═══════════════════════════════════════════════════════════
 //  CARDS
 // ═══════════════════════════════════════════════════════════
 function getCustomCards(){try{return JSON.parse(localStorage.getItem('cc_custom_cards')||'[]')}catch(e){return[]}}
 function saveCustomCards(arr){localStorage.setItem('cc_custom_cards',JSON.stringify(arr));}
 function getCardOverrides(){try{return JSON.parse(localStorage.getItem('cc_card_overrides')||'{}')}catch(e){return{}}}
 function saveCardOverride(idx,data){const o=getCardOverrides();o[idx]=data;localStorage.setItem('cc_card_overrides',JSON.stringify(o));}
-function getAllCards(){const ov=getCardOverrides();const base=CONFIG.challengeCards.map((c,i)=>ov[i]?{...c,...ov[i]}:c);return[...base,...getCustomCards()];}
+
 let allAnswersShown=true;
 function toggleAllAnswers(){allAnswersShown=!allAnswersShown;document.querySelectorAll('.card-answer-text').forEach(el=>el.classList.toggle('hidden',!allAnswersShown));document.querySelectorAll('.card-toggle-btn').forEach(btn=>{btn.textContent=allAnswersShown?'🙈 Hide':'👁 Show';btn.classList.toggle('shown',allAnswersShown);});document.getElementById('toggleAllBtn').textContent=allAnswersShown?'🙈 Hide All Answers':'👁 Show All Answers';}
+
 function renderCards(){
   document.getElementById('cardsUnitLabel').textContent=getUnitName();
-  const grid=document.getElementById('cardsGrid');grid.innerHTML='';allAnswersShown=true;document.getElementById('toggleAllBtn').textContent='🙈 Hide All Answers';
-  const tagMap={'fill-blank':['Fill in the Blank','tag-fill'],'error-correction':['Error Correction','tag-error'],'transform':['Sentence Transformation','tag-transform']};
-  getAllCards().forEach((card,i)=>{
+  renderDeckBar();
+  const grid=document.getElementById('cardsGrid');grid.innerHTML='';
+  allAnswersShown=true;document.getElementById('toggleAllBtn').textContent='🙈 Hide All Answers';
+  const tagMap={'fill-blank':['Fill in the Blank','tag-fill'],'error-correction':['Error Correction','tag-error'],'transform':['Sentence Transformation','tag-transform'],'speak':['🗣️ Speaking Prompt','tag-speak']};
+  let cardsToShow=[];
+  if(!activeDeckFilter){
+    // All: config cards + all custom cards
+    const ov=getCardOverrides();
+    const base=CONFIG.challengeCards.map((c,i)=>({...(ov[i]?{...c,...ov[i]}:c),_srcIdx:i,_isConfig:true}));
+    const custom=getCustomCards().map((c,i)=>({...c,_srcIdx:i,_isConfig:false}));
+    cardsToShow=[...base,...custom];
+  } else if(activeDeckFilter==='_config'){
+    const ov=getCardOverrides();
+    cardsToShow=CONFIG.challengeCards.map((c,i)=>({...(ov[i]?{...c,...ov[i]}:c),_srcIdx:i,_isConfig:true}));
+  } else if(activeDeckFilter==='_unassigned'){
+    cardsToShow=getCustomCards().filter(c=>!c.deck).map((c,i)=>({...c,_srcIdx:i,_isConfig:false}));
+  } else {
+    cardsToShow=getCustomCards().filter(c=>c.deck===activeDeckFilter).map((c,i)=>({...c,_srcIdx:i,_isConfig:false}));
+  }
+
+  if(!cardsToShow.length){
+    grid.innerHTML='<div class="empty" style="grid-column:1/-1">No cards in this deck yet. Add cards and assign them to this deck.</div>';
+    return;
+  }
+
+  cardsToShow.forEach((card,i)=>{
     const[lbl,cls]=tagMap[card.type]||['Challenge','tag-fill'];
-    const isCustom=i>=CONFIG.challengeCards.length,customIdx=i-CONFIG.challengeCards.length;
+    const isConfig=card._isConfig;
+    const srcIdx=card._srcIdx;
+    const deck=!isConfig?getDecks().find(d=>d.id===card.deck):null;
     const div=document.createElement('div');div.className='card-item';div.id=`card-item-${i}`;
-    div.innerHTML=`${isCustom?`<button class="card-delete-btn" onclick="deleteCustomCard(${customIdx})">✕</button>`:''}
-      <div class="card-type-tag ${cls}">${lbl}${isCustom?' <span style="opacity:.6;font-size:.56rem">CUSTOM</span>':''}</div>
+    div.innerHTML=`${!isConfig?`<button class="card-delete-btn" onclick="deleteCustomCardByIdx(${srcIdx})">✕</button>`:''}
+      ${deck?`<div class="card-deck-badge">📂 ${deck.name}</div>`:''}
+      <div class="card-type-tag ${cls}">${lbl}${!isConfig?' <span style="opacity:.6;font-size:.56rem">CUSTOM</span>':''}</div>
       <div class="card-sentence" id="card-sent-${i}">${card.sentence}</div>
       <div class="card-answer-block"><div class="card-answer-label">Answer</div><div class="card-answer-text" id="card-ans-${i}">${card.answer}</div></div>
       <div class="card-actions">
         <button class="card-toggle-btn shown" id="card-tog-${i}" onclick="toggleCardAnswer(${i},this)">🙈 Hide</button>
         <button class="card-edit-btn" onclick="toggleCardEditor(${i})">✏️ Edit</button>
+        ${card.type==='speak'?`<button class="card-edit-btn" style="color:var(--gold);border-color:var(--gold)" onclick="openSpeakFromCards()">🗣️ Open</button>`:''}
       </div>
       <div class="card-editor" id="card-ed-${i}">
         <select id="card-ed-type-${i}"><option value="fill-blank">Fill in the Blank</option><option value="error-correction">Error Correction</option><option value="transform">Sentence Transformation</option></select>
+        ${!isConfig?`<select id="card-ed-deck-${i}"><option value="">— No deck —</option>${getDecks().map(d=>`<option value="${d.id}"${card.deck===d.id?' selected':''}>${d.name}</option>`).join('')}</select>`:''}
         <textarea id="card-ed-sent-${i}">${card.sentence}</textarea>
         <input id="card-ed-ans-${i}" type="text" value="${card.answer}" placeholder="Answer…">
         <div class="card-editor-btns">
-          <button class="small-btn primary" onclick="saveCardEdit(${i},${isCustom},${isCustom?customIdx:-1})">💾 Save</button>
+          <button class="small-btn primary" onclick="saveCardEdit(${i},${!isConfig},${srcIdx})">💾 Save</button>
           <button class="small-btn" onclick="toggleCardEditor(${i})">Cancel</button>
-          ${isCustom?`<button class="small-btn danger" onclick="deleteCustomCard(${customIdx})">🗑</button>`:''}
+          ${!isConfig?`<button class="small-btn danger" onclick="deleteCustomCardByIdx(${srcIdx})">🗑</button>`:''}
         </div>
       </div>`;
     const sel=div.querySelector(`#card-ed-type-${i}`);if(sel)sel.value=card.type;
     grid.appendChild(div);
   });
 }
+
 function toggleCardAnswer(i,btn){const el=document.getElementById('card-ans-'+i);const hide=!el.classList.contains('hidden');el.classList.toggle('hidden',hide);if(btn){btn.textContent=hide?'👁 Show':'🙈 Hide';btn.classList.toggle('shown',!hide);}}
 function toggleCardEditor(i){const ed=document.getElementById('card-ed-'+i);ed.classList.toggle('open');document.getElementById('card-item-'+i).classList.toggle('editing',ed.classList.contains('open'));}
-function saveCardEdit(i,isCustom,customIdx){const type=document.getElementById(`card-ed-type-${i}`).value,sentence=document.getElementById(`card-ed-sent-${i}`).value.trim(),answer=document.getElementById(`card-ed-ans-${i}`).value.trim();if(!sentence||!answer){showToast('Fill in both fields.','red',2000);return;}if(isCustom){const arr=getCustomCards();arr[customIdx]={type,sentence,answer};saveCustomCards(arr);}else{saveCardOverride(i,{type,sentence,answer});}showToast('✅ Saved!','',1400);renderCards();}
-function deleteCustomCard(idx){if(!confirm('Delete this card?'))return;const arr=getCustomCards();arr.splice(idx,1);saveCustomCards(arr);renderCards();renderCustomCardList();showToast('Deleted.','',1400);}
+
+function saveCardEdit(i,isCustom,srcIdx){
+  const type=document.getElementById(`card-ed-type-${i}`).value;
+  const sentence=document.getElementById(`card-ed-sent-${i}`).value.trim();
+  const answer=document.getElementById(`card-ed-ans-${i}`).value.trim();
+  if(!sentence||!answer){showToast('Fill in both fields.','red',2000);return;}
+  if(isCustom){
+    const arr=getCustomCards();
+    const deckEl=document.getElementById(`card-ed-deck-${i}`);
+    arr[srcIdx]={...arr[srcIdx],type,sentence,answer,deck:deckEl?deckEl.value:arr[srcIdx].deck||''};
+    saveCustomCards(arr);
+  }else{
+    saveCardOverride(srcIdx,{type,sentence,answer});
+  }
+  showToast('✅ Saved!','',1400);renderCards();renderDeckBar();
+}
+
+function deleteCustomCardByIdx(idx){
+  if(!confirm('Delete this card?'))return;
+  const arr=getCustomCards();arr.splice(idx,1);saveCustomCards(arr);
+  renderCards();renderCustomCardList();renderDeckBar();showToast('Deleted.','',1400);
+}
+// Keep old name working for settings list
+function deleteCustomCard(idx){deleteCustomCardByIdx(idx);}
 
 // ═══════════════════════════════════════════════════════════
 //  VOCAB & LOG
@@ -1667,7 +2086,7 @@ function loadSavedMusic(){const u=localStorage.getItem('cc_music_url');if(u)setM
 // ═══════════════════════════════════════════════════════════
 async function exportData(){
   showToast('📦 Building backup…','',1500);
-  const keys=['cc_s1','cc_s2','cc_duelWin','cc_duelLoss','cc_hp_max','cc_hp_dmg','cc_hp_enabled','cc_unitName','cc_names','cc_theme','cc_custom_cards','cc_card_overrides','cc_extra_students','cc_bg','cc_music_url','cc_duel_history',STORAGE_KEY];
+  const keys=['cc_s1','cc_s2','cc_duelWin','cc_duelLoss','cc_hp_max','cc_hp_dmg','cc_hp_enabled','cc_unitName','cc_names','cc_theme','cc_custom_cards','cc_card_overrides','cc_extra_students','cc_bg','cc_music_url','cc_duel_history','cc_decks','cc_frame','cc_anim_bg','cc_speak_prompts','cc_starters',STORAGE_KEY];
   const data={version:6,exported:new Date().toISOString()};
   keys.forEach(k=>{const v=localStorage.getItem(k);if(v!==null)data[k]=v;});
   // Export all IDB images
@@ -1699,7 +2118,13 @@ async function importData(input){
         }
       }
       flash('importMsg');
-      loadState();loadSavedBg();loadSavedMusic();loadSavedTheme();renderDashboard();
+      loadState();loadSavedBg();loadSavedMusic();loadSavedTheme();
+      // Restore animated bg and frame
+      currentFrame=localStorage.getItem('cc_frame')||'none';
+      currentAnimBg=localStorage.getItem('cc_anim_bg')||'none';
+      if(currentAnimBg!=='none')setAnimBg(currentAnimBg);
+      applyFrameToAll();
+      renderDashboard();
       showToast('📥 Data imported successfully!','',2500);
     }catch(err){showToast('Error reading file.','red',2500);}
   };
@@ -1719,10 +2144,33 @@ function renderSettings(){
   const bg=localStorage.getItem('cc_bg'),prev=document.getElementById('bgPreview');
   if(bg){prev.style.backgroundImage=`url('${bg}')`;prev.textContent='';if(!bg.startsWith('data:'))document.getElementById('bgUrlInput').value=bg;}else{prev.style.backgroundImage='';prev.textContent='No background set';}
   const mu=localStorage.getItem('cc_music_url');if(mu)document.getElementById('musicUrlInput').value=mu;
-  syncThemeUI();renderCustomCardList();renderStudentEditor();
+  syncThemeUI();renderCustomCardList();renderStudentEditor();renderDeckManager();populateDeckDropdown();
 }
-function renderCustomCardList(){const list=document.getElementById('customCardList');const cards=getCustomCards();const tm={'fill-blank':'Fill in the Blank','error-correction':'Error Correction','transform':'Sentence Transformation'};if(!cards.length){list.innerHTML='<div class="empty">No custom cards yet.</div>';return;}list.innerHTML='';cards.forEach((c,i)=>{const div=document.createElement('div');div.className='custom-card-item';div.innerHTML=`<div class="custom-card-text"><div class="ct">${tm[c.type]||c.type}</div><div>${c.sentence}</div><div class="ca">✅ ${c.answer}</div></div><button class="small-btn danger" onclick="deleteCustomCard(${i})">✕</button>`;list.appendChild(div);});}
-function addCustomCard(){const type=document.getElementById('newCardType').value,sentence=document.getElementById('newCardSentence').value.trim(),answer=document.getElementById('newCardAnswer').value.trim();if(!sentence||!answer){showToast('Fill in both fields.','red',2000);return;}const arr=getCustomCards();arr.push({type,sentence,answer});saveCustomCards(arr);document.getElementById('newCardSentence').value='';document.getElementById('newCardAnswer').value='';renderCustomCardList();showToast('✅ Card added!','',1500);}
+function renderCustomCardList(){
+  const list=document.getElementById('customCardList');
+  const cards=getCustomCards();
+  const tm={'fill-blank':'Fill in the Blank','error-correction':'Error Correction','transform':'Sentence Transformation'};
+  const decks=getDecks();
+  if(!cards.length){list.innerHTML='<div class="empty">No custom cards yet.</div>';return;}
+  list.innerHTML='';
+  cards.forEach((c,i)=>{
+    const deck=decks.find(d=>d.id===c.deck);
+    const div=document.createElement('div');div.className='custom-card-item';
+    div.innerHTML=`<div class="custom-card-text"><div class="ct">${tm[c.type]||c.type}${deck?` · <span style="color:var(--purple)">📂 ${deck.name}</span>`:''}</div><div>${c.sentence}</div><div class="ca">✅ ${c.answer}</div></div><button class="small-btn danger" onclick="deleteCustomCardByIdx(${i})">✕</button>`;
+    list.appendChild(div);
+  });
+}
+function addCustomCard(){
+  const type=document.getElementById('newCardType').value;
+  const sentence=document.getElementById('newCardSentence').value.trim();
+  const answer=document.getElementById('newCardAnswer').value.trim();
+  const deck=document.getElementById('newCardDeck')?.value||'';
+  if(!sentence||!answer){showToast('Fill in both fields.','red',2000);return;}
+  const arr=getCustomCards();arr.push({type,sentence,answer,deck});saveCustomCards(arr);
+  document.getElementById('newCardSentence').value='';document.getElementById('newCardAnswer').value='';
+  renderCustomCardList();renderDeckBar();renderDuelDeckSelector();
+  showToast('✅ Card added!','',1500);
+}
 function renderStudentEditor(){
   const wrap=document.getElementById('studentEditorList');wrap.innerHTML='';
   getAllStudents().forEach(s=>{
@@ -1775,19 +2223,421 @@ async function saveStudentAvatar(id,si,input){
 function showToast(msg,type='',duration=2500){const ex=document.querySelector('.toast');if(ex)ex.remove();const t=document.createElement('div');t.className=`toast${type?' '+type:''}`;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),duration);}
 
 // ═══════════════════════════════════════════════════════════
+//  ANIMATED BACKGROUND
+// ═══════════════════════════════════════════════════════════
+const ANIM_BACKGROUNDS = {
+  none:    { label:'None (off)', fn: null },
+  particles:{ label:'✨ Particles', fn: startParticles },
+  gradient: { label:'🌊 Shifting Gradient', fn: startGradient },
+  stars:    { label:'🌌 Starfield', fn: startStars },
+  bubbles:  { label:'🫧 Bubbles', fn: startBubbles },
+  aurora:   { label:'🌈 Aurora', fn: startAurora },
+};
+let animBgFrame = null;
+let currentAnimBg = localStorage.getItem('cc_anim_bg') || 'none';
+
+function buildAnimBgPicker() {
+  const wrap = document.getElementById('animBgPicker'); if (!wrap) return;
+  wrap.innerHTML = '';
+  Object.entries(ANIM_BACKGROUNDS).forEach(([key, def]) => {
+    const btn = document.createElement('button');
+    btn.className = `anim-bg-opt${currentAnimBg === key ? ' active' : ''}`;
+    btn.textContent = def.label;
+    btn.onclick = () => { setAnimBg(key); buildAnimBgPicker(); };
+    wrap.appendChild(btn);
+  });
+}
+
+function setAnimBg(key) {
+  currentAnimBg = key;
+  localStorage.setItem('cc_anim_bg', key);
+  stopAnimBg();
+  if (key !== 'none' && ANIM_BACKGROUNDS[key]?.fn) {
+    document.body.classList.add('anim-bg-active');
+    ANIM_BACKGROUNDS[key].fn();
+  } else {
+    document.body.classList.remove('anim-bg-active');
+  }
+}
+
+function stopAnimBg() {
+  if (animBgFrame) { cancelAnimationFrame(animBgFrame); animBgFrame = null; }
+  const c = document.getElementById('bgCanvas');
+  if (c) { const ctx = c.getContext('2d'); ctx.clearRect(0, 0, c.width, c.height); }
+}
+
+function getCanvas() {
+  const c = document.getElementById('bgCanvas');
+  c.width = window.innerWidth; c.height = window.innerHeight;
+  return c;
+}
+
+function startParticles() {
+  const c = getCanvas(), ctx = c.getContext('2d');
+  const pts = Array.from({length:80}, () => ({
+    x: Math.random()*c.width, y: Math.random()*c.height,
+    r: Math.random()*2+.5, vx: (Math.random()-.5)*.4, vy: (Math.random()-.5)*.4,
+    o: Math.random()*.6+.2
+  }));
+  function draw() {
+    ctx.clearRect(0,0,c.width,c.height);
+    pts.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if(p.x<0)p.x=c.width; if(p.x>c.width)p.x=0;
+      if(p.y<0)p.y=c.height; if(p.y>c.height)p.y=0;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(79,142,247,${p.o})`; ctx.fill();
+    });
+    // Draw connecting lines
+    pts.forEach((a,i) => pts.slice(i+1).forEach(b => {
+      const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<100){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(79,142,247,${.12*(1-d/100)})`;ctx.lineWidth=.8;ctx.stroke();}
+    }));
+    animBgFrame = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function startGradient() {
+  const c = getCanvas(), ctx = c.getContext('2d');
+  let t = 0;
+  const cols = ['#0d1526','#1a0f2e','#0d2038','#101a10','#1a1006'];
+  function draw() {
+    t += .003;
+    const i = Math.floor(t) % cols.length, ni = (i+1) % cols.length;
+    const frac = t - Math.floor(t);
+    const g = ctx.createLinearGradient(0,0,c.width,c.height);
+    g.addColorStop(0, cols[i]); g.addColorStop(.5, cols[(i+2)%cols.length]); g.addColorStop(1, cols[ni]);
+    ctx.fillStyle = g; ctx.fillRect(0,0,c.width,c.height);
+    animBgFrame = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function startStars() {
+  const c = getCanvas(), ctx = c.getContext('2d');
+  const stars = Array.from({length:160}, () => ({
+    x: Math.random()*c.width, y: Math.random()*c.height,
+    r: Math.random()*1.5+.2, speed: Math.random()*.3+.05,
+    twinkle: Math.random()*Math.PI*2
+  }));
+  function draw() {
+    ctx.fillStyle = '#08101e'; ctx.fillRect(0,0,c.width,c.height);
+    stars.forEach(s => {
+      s.twinkle += .04; s.y += s.speed;
+      if(s.y > c.height) { s.y = 0; s.x = Math.random()*c.width; }
+      const alpha = .4 + .5*Math.abs(Math.sin(s.twinkle));
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(220,230,255,${alpha})`; ctx.fill();
+    });
+    animBgFrame = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function startBubbles() {
+  const c = getCanvas(), ctx = c.getContext('2d');
+  const bubs = Array.from({length:30}, () => ({
+    x: Math.random()*c.width, y: c.height+Math.random()*200,
+    r: Math.random()*24+8, speed: Math.random()*.5+.2,
+    drift: (Math.random()-.5)*.3, o: Math.random()*.25+.08
+  }));
+  function draw() {
+    ctx.clearRect(0,0,c.width,c.height);
+    bubs.forEach(b => {
+      b.y -= b.speed; b.x += b.drift;
+      if(b.y < -b.r*2) { b.y = c.height+b.r; b.x = Math.random()*c.width; }
+      ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+      ctx.strokeStyle = `rgba(79,142,247,${b.o*1.5})`; ctx.lineWidth = 1.5; ctx.stroke();
+      const g = ctx.createRadialGradient(b.x-b.r*.3,b.y-b.r*.3,0,b.x,b.y,b.r);
+      g.addColorStop(0,`rgba(120,180,255,${b.o})`); g.addColorStop(1,`rgba(79,142,247,0)`);
+      ctx.fillStyle = g; ctx.fill();
+    });
+    animBgFrame = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function startAurora() {
+  const c = getCanvas(), ctx = c.getContext('2d');
+  let t = 0;
+  function draw() {
+    t += .007;
+    ctx.fillStyle = '#050e1a'; ctx.fillRect(0,0,c.width,c.height);
+    [[61,191,130],[79,142,247],[160,108,245]].forEach((col,ci) => {
+      const phase = t + ci * 1.2;
+      ctx.beginPath();
+      ctx.moveTo(0, c.height*.3);
+      for(let x=0;x<=c.width;x+=8) {
+        const y = c.height*.3 + Math.sin(x*.004+phase)*60 + Math.sin(x*.009+phase*1.3)*30;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(c.width,0); ctx.lineTo(0,0); ctx.closePath();
+      const g = ctx.createLinearGradient(0,0,0,c.height*.5);
+      g.addColorStop(0,`rgba(${col.join(',')},0)`);
+      g.addColorStop(.5,`rgba(${col.join(',')},0.18)`);
+      g.addColorStop(1,`rgba(${col.join(',')},0)`);
+      ctx.fillStyle = g; ctx.fill();
+    });
+    animBgFrame = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CREATURE FRAMES
+// ═══════════════════════════════════════════════════════════
+const FRAMES = [
+  {id:'none',    label:'None'},
+  {id:'fire',    label:'🔥 Fire'},
+  {id:'ice',     label:'❄️ Ice'},
+  {id:'nature',  label:'🌿 Nature'},
+  {id:'lightning',label:'⚡ Lightning'},
+  {id:'rainbow', label:'🌈 Rainbow'},
+  {id:'shiny',   label:'✨ Shiny'},
+];
+let currentFrame = localStorage.getItem('cc_frame') || 'none';
+
+function buildFramePicker() {
+  const wrap = document.getElementById('framePicker'); if (!wrap) return;
+  wrap.innerHTML = '';
+  FRAMES.forEach(f => {
+    const btn = document.createElement('button');
+    btn.className = `frame-opt${currentFrame===f.id?' active':''}`;
+    btn.textContent = f.label;
+    btn.onclick = () => { setFrame(f.id); buildFramePicker(); };
+    wrap.appendChild(btn);
+  });
+}
+
+function setFrame(id) {
+  currentFrame = id;
+  localStorage.setItem('cc_frame', id);
+  applyFrameToAll();
+}
+
+function applyFrameToAll() {
+  document.querySelectorAll('.creature-wrap').forEach(w => {
+    FRAMES.forEach(f => w.classList.remove('frame-'+f.id));
+    if (currentFrame && currentFrame !== 'none') w.classList.add('frame-'+currentFrame);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EVOLUTION ANIMATION
+// ═══════════════════════════════════════════════════════════
+function triggerEvoAnimation(cardEl) {
+  if (!cardEl) return;
+  const img = cardEl.querySelector('.creature-img, .creature-fallback');
+  if (!img) return;
+  img.classList.remove('evolving');
+  void img.offsetWidth; // reflow
+  img.classList.add('evolving');
+  setTimeout(() => img.classList.remove('evolving'), 900);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ANIMATED POINT COUNTER
+// ═══════════════════════════════════════════════════════════
+function animateCounter(el, from, to, duration=600) {
+  if (!el) return;
+  const start = performance.now();
+  const diff = to - from;
+  function step(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    el.textContent = '⭐ ' + Math.round(from + diff * eased) + ' points';
+    el.classList.add('pts-animating');
+    if (progress < 1) requestAnimationFrame(step);
+    else { el.classList.remove('pts-animating'); void el.offsetWidth; el.classList.add('pts-animating'); setTimeout(() => el.classList.remove('pts-animating'), 450); }
+  }
+  requestAnimationFrame(step);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SPEAKING PROMPTS
+// ═══════════════════════════════════════════════════════════
+const DEFAULT_SPEAK_PROMPTS = [
+  { prompt: "Tell me about your favourite animal.", hint: "Use: I like… because… It can…" },
+  { prompt: "Describe your bedroom.", hint: "Use: There is / There are… It is…" },
+  { prompt: "What did you do last weekend?", hint: "Use past tense: I went… I played… I ate…" },
+  { prompt: "What is your favourite food and why?", hint: "Use: My favourite food is… I like it because…" },
+  { prompt: "Describe a person in your family.", hint: "Use: She/He has… She/He is… She/He likes…" },
+  { prompt: "What do you want to be when you grow up?", hint: "Use: I want to be… because… I will…" },
+  { prompt: "Tell me about your school day.", hint: "Use: First… Then… After that… Finally…" },
+  { prompt: "Describe the weather today.", hint: "Use: It is… The sky is… I am wearing…" },
+  { prompt: "What is your favourite game or sport?", hint: "Use: I like… You need… The rules are…" },
+  { prompt: "Tell me about a place you want to visit.", hint: "Use: I want to visit… because… There is/are…" },
+];
+
+function getSpeakPrompts() {
+  try { return JSON.parse(localStorage.getItem('cc_speak_prompts') || 'null') || DEFAULT_SPEAK_PROMPTS; } catch(e) { return DEFAULT_SPEAK_PROMPTS; }
+}
+function saveSpeakPrompts(arr) { localStorage.setItem('cc_speak_prompts', JSON.stringify(arr)); }
+
+let currentSpeakIdx = 0;
+
+function openSpeakMode() {
+  const prompts = getSpeakPrompts();
+  if (!prompts.length) { showToast('No speaking prompts yet. Add some in Settings → Cards.', 'red', 2500); return; }
+  currentSpeakIdx = Math.floor(Math.random() * prompts.length);
+  showSpeakCard();
+  document.getElementById('speakPromptOverlay').classList.remove('hidden');
+}
+function closeSpeakOverlay() { document.getElementById('speakPromptOverlay').classList.add('hidden'); }
+function showSpeakCard() {
+  const prompts = getSpeakPrompts();
+  const p = prompts[currentSpeakIdx % prompts.length];
+  document.getElementById('speakPromptText').textContent = p.prompt || p.sentence || '';
+  document.getElementById('speakPromptHint').textContent = p.hint || p.answer || '';
+}
+function nextSpeakCard() {
+  const prompts = getSpeakPrompts();
+  currentSpeakIdx = (currentSpeakIdx + 1) % prompts.length;
+  // Animate text swap
+  const el = document.getElementById('speakPromptText');
+  el.style.opacity = '0'; el.style.transform = 'translateY(10px)';
+  setTimeout(() => { showSpeakCard(); el.style.transition = 'all .3s'; el.style.opacity = '1'; el.style.transform = ''; setTimeout(() => el.style.transition = '', 350); }, 180);
+}
+
+// Speaking prompts also work from the card bank (type === 'speak')
+function openSpeakFromCards() {
+  const speakCards = getAllCards().filter(c => c.type === 'speak');
+  if (speakCards.length) {
+    // Temporarily override with card bank speak cards
+    const idx = Math.floor(Math.random() * speakCards.length);
+    document.getElementById('speakPromptText').textContent = speakCards[idx].sentence;
+    document.getElementById('speakPromptHint').textContent = speakCards[idx].answer || '';
+    document.getElementById('speakPromptOverlay').classList.remove('hidden');
+  } else {
+    openSpeakMode();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SENTENCE STARTER BANK
+// ═══════════════════════════════════════════════════════════
+const DEFAULT_STARTERS = [
+  { cat: 'Opinions', text: 'I think that…', example: 'I think that football is exciting.' },
+  { cat: 'Opinions', text: 'In my opinion…', example: 'In my opinion, dogs are better than cats.' },
+  { cat: 'Opinions', text: 'I believe…', example: 'I believe that reading is important.' },
+  { cat: 'Agreeing', text: 'I agree because…', example: 'I agree because it helps us learn.' },
+  { cat: 'Agreeing', text: 'That is a good point.', example: '' },
+  { cat: 'Disagreeing', text: 'I disagree because…', example: 'I disagree because it is too difficult.' },
+  { cat: 'Disagreeing', text: 'I see it differently…', example: 'I see it differently. I think…' },
+  { cat: 'Describing', text: 'There is / There are…', example: 'There are three people in the picture.' },
+  { cat: 'Describing', text: 'It looks like…', example: 'It looks like a park.' },
+  { cat: 'Past Tense', text: 'Last weekend I…', example: 'Last weekend I went to the park.' },
+  { cat: 'Past Tense', text: 'Yesterday I…', example: 'Yesterday I played football with my friends.' },
+  { cat: 'Future', text: 'I am going to…', example: 'I am going to visit my grandmother.' },
+  { cat: 'Future', text: 'I would like to…', example: 'I would like to travel to Japan.' },
+  { cat: 'Sequencing', text: 'First… Then… Finally…', example: 'First I wake up. Then I eat breakfast. Finally I go to school.' },
+  { cat: 'Asking', text: 'Can you tell me about…?', example: 'Can you tell me about your hobby?' },
+  { cat: 'Asking', text: 'What do you think about…?', example: 'What do you think about homework?' },
+];
+
+function getStarters() {
+  try { return JSON.parse(localStorage.getItem('cc_starters') || 'null') || DEFAULT_STARTERS; } catch(e) { return DEFAULT_STARTERS; }
+}
+function saveStarters(arr) { localStorage.setItem('cc_starters', JSON.stringify(arr)); }
+
+let highlightedStarterIdx = -1;
+
+function openStarters() {
+  renderStartersGrid();
+  document.getElementById('startersOverlay').classList.remove('hidden');
+}
+function closeStarters() { document.getElementById('startersOverlay').classList.add('hidden'); }
+
+function renderStartersGrid() {
+  const grid = document.getElementById('startersGrid'); if (!grid) return;
+  const starters = getStarters();
+  // Group by category
+  const cats = {};
+  starters.forEach((s, i) => { if (!cats[s.cat]) cats[s.cat] = []; cats[s.cat].push({...s, _idx: i}); });
+  grid.innerHTML = '';
+  Object.entries(cats).forEach(([cat, items]) => {
+    const header = document.createElement('div');
+    header.style.cssText = 'font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;grid-column:1/-1;margin-top:4px;padding-left:4px';
+    header.textContent = cat;
+    grid.appendChild(header);
+    items.forEach(s => {
+      const card = document.createElement('div');
+      card.className = `starter-card${s._idx === highlightedStarterIdx ? ' highlighted' : ''}`;
+      card.id = `starter-${s._idx}`;
+      card.innerHTML = `
+        <button class="starter-del" onclick="deleteStarter(${s._idx})">✕</button>
+        <div class="sc-text">${s.text}</div>
+        ${s.example ? `<div class="sc-example">${s.example}</div>` : ''}
+      `;
+      card.onclick = (e) => { if (e.target.classList.contains('starter-del')) return; highlightStarter(s._idx); };
+      grid.appendChild(card);
+    });
+  });
+}
+
+function highlightStarter(idx) {
+  highlightedStarterIdx = idx;
+  document.querySelectorAll('.starter-card').forEach(c => c.classList.remove('highlighted'));
+  const el = document.getElementById('starter-' + idx);
+  if (el) { el.classList.add('highlighted'); el.scrollIntoView({behavior:'smooth', block:'center'}); }
+}
+function highlightRandomStarter() {
+  const starters = getStarters();
+  if (!starters.length) return;
+  highlightStarter(Math.floor(Math.random() * starters.length));
+}
+function openAddStarterForm() { document.getElementById('addStarterForm').style.display = ''; }
+function closeAddStarterForm() { document.getElementById('addStarterForm').style.display = 'none'; }
+function addStarter() {
+  const cat = document.getElementById('newStarterCat').value.trim() || 'General';
+  const text = document.getElementById('newStarterText').value.trim();
+  const example = document.getElementById('newStarterExample').value.trim();
+  if (!text) { showToast('Enter a sentence starter.', 'red', 1800); return; }
+  const arr = getStarters();
+  arr.push({ cat, text, example });
+  saveStarters(arr);
+  document.getElementById('newStarterCat').value = '';
+  document.getElementById('newStarterText').value = '';
+  document.getElementById('newStarterExample').value = '';
+  closeAddStarterForm();
+  renderStartersGrid();
+  showToast('💬 Starter added!', '', 1500);
+}
+function deleteStarter(idx) {
+  if (!confirm('Remove this sentence starter?')) return;
+  const arr = getStarters();
+  arr.splice(idx, 1);
+  saveStarters(arr);
+  if (highlightedStarterIdx === idx) highlightedStarterIdx = -1;
+  renderStartersGrid();
+}
+
+// ═══════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════
 async function init(){
   document.getElementById('navUnit').textContent=getUnitName();
   loadState();
-  loadSavedTheme();buildThemeUI();buildSoundUI();
-  // Migrate old localStorage avatars → IDB, then preload all into cache
+  loadSavedTheme();buildThemeUI();buildSoundUI();buildAnimBgPicker();buildFramePicker();
   await migrateAvatarsToIDB();
   await preloadAllAvatars();
-  // Now safe to render (cache is populated)
-  loadSavedBg();loadSavedMusic();renderDashboard();
+  loadSavedBg();loadSavedMusic();
+  // Start animated background if one was saved
+  if(currentAnimBg && currentAnimBg!=='none') setAnimBg(currentAnimBg);
+  // Apply creature frame
+  // (called after each renderDashboard via hook below)
+  renderDashboard();
 }
 init();
+
+// Resize animated background canvas on window resize
+window.addEventListener('resize', ()=>{
+  if(currentAnimBg && currentAnimBg!=='none'){
+    stopAnimBg();
+    if(ANIM_BACKGROUNDS[currentAnimBg]?.fn) ANIM_BACKGROUNDS[currentAnimBg].fn();
+  }
+});
 
 // Button ripple effect
 document.addEventListener('click',e=>{
