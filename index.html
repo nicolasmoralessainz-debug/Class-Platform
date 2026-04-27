@@ -773,12 +773,28 @@ h2{background:linear-gradient(135deg,var(--text) 40%,var(--accent));-webkit-back
 .boss-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:260;display:flex;flex-direction:column;align-items:center;padding:20px;overflow-y:auto}
 .boss-overlay.hidden{display:none}
 .boss-arena{width:100%;max-width:720px;margin:0 auto}
-.boss-card{background:linear-gradient(135deg,#1a0828,#2d0a3c);border:3px solid var(--red);border-radius:20px;padding:20px;text-align:center;margin-bottom:16px;box-shadow:0 0 40px rgba(224,92,92,.4)}
+.boss-card{background:linear-gradient(135deg,#1a0828,#2d0a3c);border:3px solid var(--red);border-radius:20px;padding:20px;text-align:center;margin-bottom:16px;box-shadow:0 0 40px rgba(224,92,92,.4);position:relative;overflow:hidden}
+.boss-card .boss-arena-bg{position:absolute;inset:0;opacity:.3;z-index:0;border-radius:18px}
+.boss-card>*{position:relative;z-index:1}
 .boss-img{width:130px;height:130px;object-fit:contain;margin:0 auto 10px;display:block;animation:creatureFloat 2s ease-in-out infinite}
 .boss-name{font-size:1.5rem;font-weight:900;color:var(--red);text-shadow:0 0 20px rgba(224,92,92,.6)}
+.boss-title{font-size:.78rem;color:var(--muted);font-style:italic;margin-top:2px}
 .boss-hp-bar{height:16px;border-radius:99px;overflow:hidden;background:rgba(0,0,0,.4);border:1px solid rgba(224,92,92,.4);margin-top:10px}
 .boss-hp-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--red),#ff6b6b);transition:width .6s;box-shadow:0 0 10px var(--red)}
 .boss-log{background:rgba(0,0,0,.5);border-radius:12px;padding:10px;max-height:80px;overflow-y:auto;font-size:.8rem;margin-top:10px}
+.boss-taunt{text-align:center;background:rgba(0,0,0,.6);border:1px solid var(--red);border-radius:12px;padding:10px 16px;font-size:.88rem;font-style:italic;color:#ff8888;margin:8px 0;animation:bossShake .3s ease}
+@keyframes bossShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.boss-entry{animation:bossEntry .8s ease}
+@keyframes bossEntry{0%{transform:translateY(-60px) scale(1.3);opacity:0}60%{transform:translateY(10px) scale(.95)}100%{transform:translateY(0) scale(1)}}
+.boss-skin-picker{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.boss-skin-btn{background:var(--card2);border:2px solid var(--border);border-radius:10px;padding:6px 10px;cursor:pointer;font-size:.78rem;font-family:inherit;color:var(--text);transition:all .15s;text-align:center;min-width:60px}
+.boss-skin-btn:hover,.boss-skin-btn.active{border-color:var(--red);color:var(--red)}
+.boss-skin-btn .skin-emoji{font-size:1.4rem;display:block;margin-bottom:2px}
+.boss-arena-picker{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}
+.boss-arena-btn{padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card2);color:var(--text);cursor:pointer;font-size:.72rem;font-family:inherit;transition:all .15s}
+.boss-arena-btn:hover,.boss-arena-btn.active{border-color:var(--red);color:var(--red)}
+.boss-loot-reveal{text-align:center;background:linear-gradient(135deg,#1a0828,#2d0a3c);border:3px solid var(--gold);border-radius:16px;padding:24px;margin-top:14px;animation:lootPulse 1s ease-in-out infinite}
+@keyframes lootPulse{0%,100%{box-shadow:0 0 20px rgba(245,200,66,.4)}50%{box-shadow:0 0 40px rgba(245,200,66,.7)}}
 
 /* ── Printable creature card ── */
 .creature-card-print{width:200px;background:linear-gradient(135deg,var(--card),var(--card2));border:3px solid var(--accent);border-radius:16px;padding:14px;text-align:center;display:inline-block;margin:8px;vertical-align:top;box-shadow:0 4px 16px rgba(0,0,0,.4)}
@@ -4237,46 +4253,176 @@ function buildSoundThemePicker(){
 //  BOSS BATTLE
 // ═══════════════════════════════════════════════════════════
 let bossHP=0,bossMaxHP=20,bossActive=false;
+let bossSkinId='dark_prof',bossArenaId='throne',bossDeckFilter=null;
+let bossMusic=null,bossRound=0,bossMVP={};
+
+// ── 8-bit audio generator (Web Audio API) ──
+function create8bitCtx(){return new (window.AudioContext||window.webkitAudioContext)();}
+
+function play8bitSfx(type){
+  try{
+    const ctx=create8bitCtx();const g=ctx.createGain();g.connect(ctx.destination);
+    const o=ctx.createOscillator();o.connect(g);o.type='square';
+    if(type==='hit'){o.frequency.setValueAtTime(600,ctx.currentTime);o.frequency.exponentialRampToValueAtTime(200,ctx.currentTime+.15);g.gain.setValueAtTime(.3,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,ctx.currentTime+.2);o.start();o.stop(ctx.currentTime+.2);}
+    else if(type==='miss'){o.frequency.setValueAtTime(200,ctx.currentTime);o.frequency.exponentialRampToValueAtTime(80,ctx.currentTime+.3);g.gain.setValueAtTime(.25,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.01,ctx.currentTime+.3);o.start();o.stop(ctx.currentTime+.35);}
+    else if(type==='critical'){
+      g.gain.setValueAtTime(.3,ctx.currentTime);
+      [800,1000,1200,1400].forEach((f,i)=>{const o2=ctx.createOscillator();o2.type='square';o2.frequency.value=f;o2.connect(g);o2.start(ctx.currentTime+i*.06);o2.stop(ctx.currentTime+i*.06+.08);});
+      o.frequency.value=1600;o.start(ctx.currentTime+.24);o.stop(ctx.currentTime+.4);
+    }
+    else if(type==='fanfare'){
+      g.gain.setValueAtTime(.25,ctx.currentTime);
+      const notes=[523,659,784,1047,784,1047,1319];
+      notes.forEach((f,i)=>{const o2=ctx.createOscillator();o2.type='square';o2.frequency.value=f;o2.connect(g);o2.start(ctx.currentTime+i*.12);o2.stop(ctx.currentTime+i*.12+.15);});
+      o.disconnect();
+    }
+    else if(type==='entry'){
+      g.gain.setValueAtTime(.3,ctx.currentTime);
+      const notes=[130,110,90,70,90,130,175,220];
+      notes.forEach((f,i)=>{const o2=ctx.createOscillator();o2.type='sawtooth';o2.frequency.value=f;o2.connect(g);o2.start(ctx.currentTime+i*.1);o2.stop(ctx.currentTime+i*.1+.12);});
+      o.disconnect();
+    }
+    setTimeout(()=>ctx.close(),3000);
+  }catch(e){}
+}
+
+// ── 8-bit boss background music loop ──
+let bossAudioCtx=null,bossMusicInterval=null;
+function startBossMusic(){
+  try{
+    stopBossMusic();
+    bossAudioCtx=create8bitCtx();
+    const baseNotes=[130,130,165,130,175,165,130,130];
+    let step=0;
+    bossMusicInterval=setInterval(()=>{
+      if(!bossActive){stopBossMusic();return;}
+      const g=bossAudioCtx.createGain();g.connect(bossAudioCtx.destination);
+      g.gain.setValueAtTime(.12,bossAudioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(.01,bossAudioCtx.currentTime+.2);
+      // Bass
+      const o=bossAudioCtx.createOscillator();o.type='square';o.frequency.value=baseNotes[step%baseNotes.length];
+      o.connect(g);o.start();o.stop(bossAudioCtx.currentTime+.18);
+      // Hi-hat on even beats
+      if(step%2===0){
+        const n=bossAudioCtx.createBufferSource();
+        const buf=bossAudioCtx.createBuffer(1,bossAudioCtx.sampleRate*.05,bossAudioCtx.sampleRate);
+        const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*.15;
+        n.buffer=buf;n.connect(bossAudioCtx.destination);n.start();
+      }
+      step++;
+    },220);
+  }catch(e){}
+}
+function stopBossMusic(){
+  if(bossMusicInterval){clearInterval(bossMusicInterval);bossMusicInterval=null;}
+  if(bossAudioCtx){try{bossAudioCtx.close();}catch(e){}}
+  bossAudioCtx=null;
+}
+
 function openBoss(){renderBossSetup();document.getElementById('bossOverlay').classList.remove('hidden');}
-function closeBoss(){document.getElementById('bossOverlay').classList.add('hidden');bossActive=false;}
+function closeBoss(){document.getElementById('bossOverlay').classList.add('hidden');bossActive=false;stopBossMusic();}
+
+function getBossSkin(){return BOSS_SKINS.find(s=>s.id===bossSkinId)||BOSS_SKINS[0];}
+function getBossArena(){return BOSS_ARENAS.find(a=>a.id===bossArenaId)||BOSS_ARENAS[0];}
+
 function renderBossSetup(){
+  const skin=getBossSkin();
+  const arena=getBossArena();
   const p=getTeacherProfile();
-  const avHtml=p.avatar?`<img class="boss-img" src="${p.avatar}" alt="">`:`<div class="boss-img" style="border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:3.5rem;margin:0 auto 10px">😈</div>`;
+  const customImg=p.bossAvatar||skin.img;
+  const avHtml=customImg?`<img class="boss-img boss-entry" src="${customImg}" alt="">`:`<div class="boss-img boss-entry" style="border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:3.5rem;margin:0 auto 10px">${skin.emoji}</div>`;
+
+  const decks=getDecks();
+  const deckOptions=`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">
+    <button class="boss-arena-btn${!bossDeckFilter?' active':''}" onclick="bossDeckFilter=null;renderBossSetup()">📚 All Cards</button>
+    ${decks.map(d=>`<button class="boss-arena-btn${bossDeckFilter===d.id?' active':''}" onclick="bossDeckFilter='${d.id}';renderBossSetup()">📂 ${d.name}</button>`).join('')}
+  </div>`;
+
   document.getElementById('bossArena').innerHTML=`
     <div style="text-align:center;margin-bottom:16px"><h2 style="color:var(--red);text-shadow:0 0 20px rgba(224,92,92,.5)">👹 Boss Battle</h2><p style="color:var(--muted);font-size:.82rem;margin-top:4px">The whole class works together to defeat the boss!</p></div>
     <div class="boss-card">
+      <div class="boss-arena-bg" style="background:${arena.gradient}"></div>
       ${avHtml}
-      <div class="boss-name">${p.name||'Professor Dark'}</div>
-      <div style="font-size:.76rem;color:var(--muted);margin-top:3px">${p.title||'Master of Grammar'}</div>
+      <div class="boss-name">${skin.name}</div>
+      <div class="boss-title">${skin.title}</div>
     </div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;max-width:500px;margin:0 auto">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;max-width:560px;margin:0 auto">
+      <div style="font-size:.8rem;font-weight:700;margin-bottom:6px">🎭 Choose Boss Skin:</div>
+      <div class="boss-skin-picker">
+        ${BOSS_SKINS.map(s=>`<button class="boss-skin-btn${bossSkinId===s.id?' active':''}" onclick="bossSkinId='${s.id}';renderBossSetup()"><span class="skin-emoji">${s.emoji}</span>${s.name}</button>`).join('')}
+      </div>
+      <div style="margin-top:8px">
+        <button class="small-btn" onclick="uploadBossAvatar()">📷 Upload custom boss image</button>
+        <input type="file" id="bossAvatarInput" accept="image/*" style="display:none" onchange="saveBossAvatar(this)">
+        ${customImg&&customImg!==skin.img?`<button class="small-btn danger" onclick="clearBossAvatar();renderBossSetup()">✕ Remove custom image</button>`:''}
+      </div>
+
+      <hr style="margin:12px 0">
+      <div style="font-size:.8rem;font-weight:700;margin-bottom:6px">🏟️ Boss Arena:</div>
+      <div class="boss-arena-picker">
+        ${BOSS_ARENAS.map(a=>`<button class="boss-arena-btn${bossArenaId===a.id?' active':''}" onclick="bossArenaId='${a.id}';renderBossSetup()">${a.emoji} ${a.name}</button>`).join('')}
+      </div>
+
+      <hr style="margin:12px 0">
+      <div style="font-size:.8rem;font-weight:700;margin-bottom:6px">🃏 Card Deck:</div>
+      ${deckOptions}
+
+      <hr style="margin:12px 0">
       <div class="settings-row"><span class="settings-label">Boss HP</span><input type="number" id="bossMaxHpInput" value="20" min="5" max="50" class="settings-input" style="width:80px"></div>
-      <div style="display:flex;gap:10px;justify-content:center;margin-top:12px">
+
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:14px">
         <button class="btn red" onclick="startBoss()">👹 Start Boss Battle!</button>
         <button class="btn grey" onclick="closeBoss()">✕ Cancel</button>
       </div>
     </div>`;
 }
+
+function uploadBossAvatar(){document.getElementById('bossAvatarInput').click();}
+async function saveBossAvatar(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=async e=>{
+    const compressed=await compressImage(e.target.result,200,0.8);
+    const p=getTeacherProfile();p.bossAvatar=compressed;
+    localStorage.setItem('cc_teacher',JSON.stringify(p));
+    renderBossSetup();showToast('👹 Boss image uploaded!','',1500);
+  };
+  r.readAsDataURL(f);
+}
+function clearBossAvatar(){
+  const p=getTeacherProfile();delete p.bossAvatar;
+  localStorage.setItem('cc_teacher',JSON.stringify(p));
+}
+
 function startBoss(){
   bossMaxHP=parseInt(document.getElementById('bossMaxHpInput')?.value||20);
-  bossHP=bossMaxHP;bossActive=true;
+  bossHP=bossMaxHP;bossActive=true;bossRound=0;bossMVP={};
+  play8bitSfx('entry');
+  setTimeout(()=>startBossMusic(),800);
   renderBossArena();
 }
 function renderBossArena(){
+  const skin=getBossSkin();
+  const arena=getBossArena();
   const p=getTeacherProfile();
+  const customImg=p.bossAvatar||skin.img;
   const pct=(bossHP/bossMaxHP)*100;
-  const avHtml=p.avatar?`<img class="boss-img" src="${p.avatar}" alt="">`:`<div class="boss-img" style="border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:3.5rem;margin:0 auto 10px">😈</div>`;
+  const avHtml=customImg?`<img class="boss-img boss-entry" src="${customImg}" alt="">`:`<div class="boss-img boss-entry" style="border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:3.5rem;margin:0 auto 10px">${skin.emoji}</div>`;
+
   document.getElementById('bossArena').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <h2 style="color:var(--red);margin:0">👹 Boss Battle</h2>
       <div style="display:flex;gap:8px"><button class="btn grey" style="padding:6px 12px;font-size:.8rem" onclick="closeBoss()">✕ End</button></div>
     </div>
     <div class="boss-card">
+      <div class="boss-arena-bg" style="background:${arena.gradient}"></div>
       ${avHtml}
-      <div class="boss-name">${p.name||'Professor Dark'}</div>
+      <div class="boss-name">${skin.name}</div>
+      <div class="boss-title">${skin.title}</div>
       <div style="font-size:.76rem;color:var(--muted)">❤️ ${bossHP} / ${bossMaxHP} HP</div>
       <div class="boss-hp-bar"><div class="boss-hp-fill" id="bossHpFill" style="width:${pct}%"></div></div>
     </div>
+    <div class="boss-taunt" id="bossTaunt" style="display:none"></div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;max-width:600px;margin:14px auto">
       <div class="card-type-tag" id="bossCardTag"></div>
       <div style="font-size:1.05rem;font-weight:600;line-height:1.6;margin-bottom:10px" id="bossSentence"></div>
@@ -4289,7 +4435,7 @@ function renderBossArena(){
       <div class="duel-btns" style="margin-top:10px">
         <button class="btn green" onclick="bossDamage(true)">✅ Class correct — deal damage!</button>
         <button class="btn purple" onclick="drawBossCard()">🔀 New Card</button>
-        <button class="btn red" onclick="bossDamage(false)">❌ Wrong — boss attacks a student!</button>
+        <button class="btn red" onclick="bossDamage(false)">❌ Wrong — boss attacks!</button>
       </div>
     </div>
     <div class="boss-log" id="bossLog"></div>
@@ -4297,7 +4443,9 @@ function renderBossArena(){
   drawBossCard();
 }
 function drawBossCard(){
-  const cards=getAllCards();const card=cards[Math.floor(Math.random()*cards.length)];
+  const cards=getCardsForDeck(bossDeckFilter);
+  if(!cards.length){showToast('No cards in selected deck!','red',2000);return;}
+  const card=cards[Math.floor(Math.random()*cards.length)];
   const tagMap={'fill-blank':['Fill in the Blank','tag-fill'],'error-correction':['Error Correction','tag-error'],'transform':['Sentence Transformation','tag-transform'],'speak':['🗣️ Speaking','tag-speak']};
   const[lbl,cls]=tagMap[card.type]||['Challenge','tag-fill'];
   document.getElementById('bossCardTag').textContent=lbl;document.getElementById('bossCardTag').className=`card-type-tag ${cls}`;
@@ -4306,37 +4454,89 @@ function drawBossCard(){
   document.getElementById('bossAnswerBlock').classList.remove('visible');
 }
 function toggleBossAnswer(){document.getElementById('bossAnswerBlock').classList.toggle('visible');}
+
+function showBossTaunt(){
+  const el=document.getElementById('bossTaunt');if(!el)return;
+  const taunt=BOSS_TAUNTS[Math.floor(Math.random()*BOSS_TAUNTS.length)];
+  el.textContent=taunt;el.style.display='block';
+  // Force re-trigger animation
+  el.classList.remove('boss-taunt');void el.offsetWidth;el.classList.add('boss-taunt');
+  setTimeout(()=>{if(el)el.style.display='none';},2500);
+}
+
 function bossDamage(classCorrect){
   if(!bossActive)return;
+  bossRound++;
   const log=document.getElementById('bossLog');
   if(classCorrect){
     bossHP=Math.max(0,bossHP-1);
     const fill=document.getElementById('bossHpFill');
-    if(fill){fill.style.width=((bossHP/bossMaxHP)*100)+'%';}
-    const upd=document.getElementById('bossArena').querySelector('.boss-name+div');
+    if(fill)fill.style.width=((bossHP/bossMaxHP)*100)+'%';
+    const upd=document.querySelector('.boss-card .boss-name+.boss-title+div');
     if(upd)upd.textContent=`❤️ ${bossHP} / ${bossMaxHP} HP`;
     if(log){const e=document.createElement('div');e.style.cssText='color:var(--green);font-size:.78rem;margin-bottom:3px';e.textContent=`💥 Class deals 1 damage! Boss HP: ${bossHP}/${bossMaxHP}`;log.appendChild(e);log.scrollTop=log.scrollHeight;}
-    playSfx('win');
+    play8bitSfx(bossHP<=bossMaxHP*0.25?'critical':'hit');
     if(bossHP<=0){endBoss(true);return;}
   }else{
-    // Randomly penalise one student
     const students=getAllStudents().filter(s=>state[s.id]);
     const target=students[Math.floor(Math.random()*students.length)];
     if(target&&state[target.id]){state[target.id].points=Math.max(0,state[target.id].points-1);save();}
     if(log){const e=document.createElement('div');e.style.cssText='color:var(--red);font-size:.78rem;margin-bottom:3px';e.textContent=`😈 Boss attacks ${target?getStudentName(target):'a student'}! −1 pt`;log.appendChild(e);log.scrollTop=log.scrollHeight;}
-    playSfx('lose');
+    play8bitSfx('miss');
   }
+  // Show taunt every 3 rounds
+  if(bossRound%3===0)showBossTaunt();
   drawBossCard();
 }
+
 function endBoss(classWon){
   bossActive=false;
+  stopBossMusic();
   const over=document.getElementById('bossOver');if(!over)return;
   over.style.display='';
+
+  // Save to boss history
+  const history=JSON.parse(localStorage.getItem('cc_boss_history')||'[]');
+  const skin=getBossSkin();
+  history.unshift({date:new Date().toLocaleDateString('es-CL'),boss:skin.name,result:classWon?'WIN':'LOSS',rounds:bossRound,hp:`${bossHP}/${bossMaxHP}`});
+  localStorage.setItem('cc_boss_history',JSON.stringify(history.slice(0,30)));
+
   if(classWon){
-    over.innerHTML=`<div style="text-align:center;padding:20px;background:var(--card);border:3px solid var(--gold);border-radius:16px;margin-top:14px"><div style="font-size:2.5rem;margin-bottom:8px">🏆</div><div style="font-size:1.2rem;font-weight:800;color:var(--gold)">The class defeated the boss!</div><button class="btn green" style="margin-top:14px" onclick="awardClassPoints();closeBoss()">⭐ Award +2 pts to whole class</button></div>`;
-    startConfetti();setTimeout(stopConfetti,4000);playSfx('duelwin');
+    play8bitSfx('fanfare');
+    // Roll loot
+    const loot=BOSS_LOOT[Math.floor(Math.random()*BOSS_LOOT.length)];
+    let lootHtml='';
+    if(loot.type==='class_reward'){
+      if(loot.action==='points'){
+        getAllStudents().forEach(s=>{if(state[s.id])state[s.id].points=(state[s.id].points||0)+loot.value;});
+        save();
+      }
+      lootHtml=`<div style="font-size:1.1rem;font-weight:700;color:var(--gold);margin-bottom:6px">🎁 LOOT: ${loot.label}</div>`;
+      if(loot.action==='announce')lootHtml+=`<div style="font-size:1.6rem;margin-bottom:8px">${loot.value}</div>`;
+    }else if(loot.type==='badge'){
+      const students=getAllStudents();
+      const lucky=students[Math.floor(Math.random()*students.length)];
+      const badgeId=loot.badgePool[Math.floor(Math.random()*loot.badgePool.length)];
+      const badge=BADGES.find(b=>b.id===badgeId);
+      if(lucky&&state[lucky.id]){
+        if(!state[lucky.id].badges)state[lucky.id].badges=[];
+        if(!state[lucky.id].badges.includes(badgeId))state[lucky.id].badges.push(badgeId);
+        save();
+      }
+      lootHtml=`<div style="font-size:1.1rem;font-weight:700;color:var(--gold);margin-bottom:6px">🎁 LOOT: ${loot.label}</div>
+        <div style="font-size:.88rem;margin-bottom:8px">${badge?.emoji||''} ${badge?.name||''} awarded to <strong>${lucky?getStudentName(lucky):'—'}</strong>!</div>`;
+    }
+
+    over.innerHTML=`<div class="boss-loot-reveal">
+      <div style="font-size:2.5rem;margin-bottom:8px">🏆</div>
+      <div style="font-size:1.3rem;font-weight:800;color:var(--gold);margin-bottom:12px">The class defeated ${getBossSkin().name}!</div>
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:12px">Rounds: ${bossRound}</div>
+      ${lootHtml}
+      <button class="btn green" style="margin-top:14px" onclick="closeBoss();renderDashboard()">🎉 Celebrate!</button>
+    </div>`;
+    startConfetti();setTimeout(stopConfetti,5000);
   }else{
-    over.innerHTML=`<div style="text-align:center;padding:20px;background:var(--card);border:3px solid var(--red);border-radius:16px;margin-top:14px"><div style="font-size:2.5rem;margin-bottom:8px">😈</div><div style="font-size:1.2rem;font-weight:800;color:var(--red)">The boss won this time…</div><button class="btn grey" style="margin-top:14px" onclick="closeBoss()">Close</button></div>`;
+    over.innerHTML=`<div style="text-align:center;padding:20px;background:var(--card);border:3px solid var(--red);border-radius:16px;margin-top:14px"><div style="font-size:2.5rem;margin-bottom:8px">😈</div><div style="font-size:1.2rem;font-weight:800;color:var(--red)">${getBossSkin().name} won this time…</div><div style="font-size:.82rem;color:var(--muted);margin-top:6px">Rounds survived: ${bossRound}</div><button class="btn grey" style="margin-top:14px" onclick="closeBoss()">Close</button></div>`;
   }
 }
 
